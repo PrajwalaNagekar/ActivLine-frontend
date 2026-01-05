@@ -1,4 +1,4 @@
-const ActivlineLogo = ({ className = "h-8" }) => (
+const ActivlineLogo = ({ className = "h-10" }) => (
   <svg viewBox="0 -28 220 80" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
     <text x="10" y="45" fontFamily="sans-serif" fontWeight="bold" fontSize="38" fill="currentColor" letterSpacing="-1">
       activl

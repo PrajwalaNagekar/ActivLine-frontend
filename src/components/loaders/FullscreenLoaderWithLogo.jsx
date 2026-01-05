@@ -1,20 +1,23 @@
 // components/FullScreenLoader.jsx
 import ActivlineLogo from "../../logo/Logo";
+import { useTheme } from "../../context/ThemeContext";
 
 const FullScreenLoader = ({ show = true }) => {
+  const { isDark } = useTheme();
+
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white dark:bg-black">
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
       <div className="flex flex-col items-center gap-6">
         
         {/* Logo animation */}
-        <div className="animate-pulse text-gray-900 dark:text-white">
+        <div className={`animate-pulse ${isDark ? 'text-white' : 'text-gray-900'}`}>
           <ActivlineLogo className="h-14 w-auto" />
         </div>
 
         {/* Loading text */}
-        <p className="text-sm tracking-widest text-gray-500">
+        <p className={`text-sm tracking-widest ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
           LOADING
         </p>
 
