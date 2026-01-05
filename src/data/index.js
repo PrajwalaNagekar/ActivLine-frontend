@@ -150,11 +150,11 @@ export const INITIAL_FIELD_STAFF_DATA = [
 ];
 
 export const TRANSACTIONS_DATA = [
-  { id: 'INV-2023-001', user: 'Alex Johnson', amount: '₹1,499', status: 'Paid', date: 'Oct 26, 10:30 AM' },
-  { id: 'INV-2023-002', user: 'Rahul Kumar', amount: '₹1,499', status: 'Pending', date: 'Oct 25, 09:15 AM' },
-  { id: 'INV-2023-003', user: 'Priya Sharma', amount: '₹999', status: 'Paid', date: 'Oct 24, 02:20 PM' },
-  { id: 'INV-2023-004', user: 'Mike Tyson', amount: '₹599', status: 'Pending', date: 'Oct 23, 11:00 AM' },
-  { id: 'INV-2023-005', user: 'Sarah Lee', amount: '₹2,499', status: 'Paid', date: 'Oct 22, 04:45 PM' },
+  { id: 'INV-2023-001', user: 'Alex Johnson', amount: '₹1,499', status: 'Paid', date: 'Oct 26, 10:30 AM', type: "New Purchase" },
+  { id: 'INV-2023-002', user: 'Rahul Kumar', amount: '₹1,499', status: 'Pending', date: 'Oct 25, 09:15 AM', type: "Renewal" },
+  { id: 'INV-2023-003', user: 'Priya Sharma', amount: '₹999', status: 'Paid', date: 'Oct 24, 02:20 PM', type: "Renewal" },
+  { id: 'INV-2023-004', user: 'Mike Tyson', amount: '₹599', status: 'Pending', date: 'Oct 23, 11:00 AM', type: "Renewal" },
+  { id: 'INV-2023-005', user: 'Sarah Lee', amount: '₹2,499', status: 'Paid', date: 'Oct 22, 04:45 PM', type: "Renewal" },
 ];
 
 export const INITIAL_CAMPAIGNS_DATA = [

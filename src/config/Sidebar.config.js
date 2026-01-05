@@ -6,7 +6,11 @@ import {
   Megaphone,
   MessageSquare,
   Settings,
-  Building
+  Building,
+  ChartNoAxesColumnIncreasing,
+  UserCog,
+  FileClock,
+  LayoutGrid
 } from "lucide-react";
 
 export const adminSidebarItems = [
@@ -17,40 +21,64 @@ export const adminSidebarItems = [
     paths: ["/dashboard"],
   },
   {
+    icon: MessageSquare,
+    label: "Tickets",
+    key: "Tickets",
+    paths: ["/tickets"],
+  },
+  {
     icon: Users,
-    label: "Subscribers",
-    key: "Subscribers",
-    paths: ["/subscribers"],
+    label: "Customers",
+    key: "Customers",
+    paths: ["/customers"],
   },
-  {
-    icon: MapPin,
-    label: "Field Staff",
-    key: "Field Staff",
-    paths: ["/field-staff"],
-  },
-  {
-    icon: Building,
-    label: "Franchise Management",
-    key: "Franchise",
-    paths: ["/franchise"],
-  },
+  // {
+  //   icon: MapPin,
+  //   label: "Field Staff",
+  //   key: "Field Staff",
+  //   paths: ["/field-staff"],
+  // },
+  // {
+  //   icon: Building,
+  //   label: "Franchise Management",
+  //   key: "Franchise",
+  //   paths: ["/franchise"],
+  // },
   {
     icon: CreditCard,
-    label: "Billing Engine",
-    key: "Billing Engine",
-    paths: ["/billing"],
+    label: "Payments",
+    key: "Payments",
+    paths: ["/payments"],
+  },
+  // {
+  //   icon: Megaphone,
+  //   label: "Offers & Ads",
+  //   key: "Offers & Ads",
+  //   paths: ["/offers"],
+  // },
+  {
+    icon: LayoutGrid,
+    label: "Plans",
+    key: "Plans",
+    paths: ["/plans"],
   },
   {
-    icon: Megaphone,
-    label: "Offers & Ads",
-    key: "Offers & Ads",
-    paths: ["/offers"],
+    icon: UserCog,
+    label: "Staff",
+    key: "Staff",
+    paths: ["/staff"],
   },
   {
-    icon: MessageSquare,
-    label: "Support (WA)",
-    key: "Support (WA)",
-    paths: ["/support"],
+    icon: ChartNoAxesColumnIncreasing,
+    label: "Reports",
+    key: "Reports",
+    paths: ["/reports"],
+  },
+  {
+    icon: FileClock,
+    label: "Logs",
+    key: "Logs",
+    paths: ["/logs"],
   },
   {
     icon: Settings,
@@ -69,9 +97,9 @@ export const franchiseSidebarItems = [
   },
   {
     icon: Users,
-    label: "Subscribers",
-    key: "Subscribers",
-    paths: ["/my-subscribers"],
+    label: "Customers",
+    key: "Customers",
+    paths: ["/my-customers"],
   },
   {
     icon: MapPin,
@@ -87,9 +115,9 @@ export const franchiseSidebarItems = [
   },
   {
     icon: MessageSquare,
-    label: "Zone Support",
-    key: "Zone Support",
-    paths: ["/zone-support"],
+    label: "Tickets",
+    key: "Tickets",
+    paths: ["/zone-tickets"],
   },
   {
     icon: Settings,

@@ -20,7 +20,7 @@ const BillingPage = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
-    
+
     return {
       paginatedTransactions,
       totalPages,
@@ -48,10 +48,10 @@ const BillingPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className={`p-6 rounded-xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
           <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg"><RefreshCw className="w-5 h-5"/></div>
+            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg"><RefreshCw className="w-5 h-5" /></div>
             <span className="text-xs font-medium text-green-400 bg-green-500/10 px-2 py-1 rounded">85% Ready</span>
           </div>
           <h3 className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>Auto-Billing Status</h3>
@@ -64,7 +64,7 @@ const BillingPage = () => {
 
         <div className={`p-6 rounded-xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
           <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-red-500/10 text-red-400 rounded-lg"><AlertTriangle className="w-5 h-5"/></div>
+            <div className="p-2 bg-red-500/10 text-red-400 rounded-lg"><AlertTriangle className="w-5 h-5" /></div>
           </div>
           <h3 className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>Pending Dues</h3>
           <p className={`text-sm mb-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Users at risk of suspension</p>
@@ -75,41 +75,46 @@ const BillingPage = () => {
         <div className={`p-6 rounded-xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
           <h3 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Payment Gateways</h3>
           <div className="space-y-4">
-             <div className="flex justify-between items-center">
-               <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                 <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Razorpay</span>
-               </div>
-               <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>99.2% Success</span>
-             </div>
-             <div className="flex justify-between items-center">
-               <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                 <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>UPI</span>
-               </div>
-               <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>98.5% Success</span>
-             </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Razorpay</span>
+              </div>
+              <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>99.2% Success</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>UPI</span>
+              </div>
+              <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>98.5% Success</span>
+            </div>
           </div>
           <button className={`w-full mt-8 text-sm font-medium hover:underline text-left ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>View Settlement Report →</button>
         </div>
-      </div>
+      </div> */}
 
       <div className={`rounded-xl shadow-sm border flex flex-col h-full ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
         <div className={`p-6 border-b flex justify-between items-center flex-shrink-0 ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
-            <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Recent Transactions</h3>
-            
-            <div className="relative">
-                <select 
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    className={`border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 appearance-none pr-8 cursor-pointer transition-colors ${isDark ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'}`}
-                >
-                    <option value="All">All Transactions</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Pending">Pending Dues</option>
-                </select>
-                <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-500'}`} />
-            </div>
+          <h1
+            className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'
+              }`}
+          >
+            Transactions
+          </h1>
+
+          <div className="relative">
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className={`border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 appearance-none pr-8 cursor-pointer transition-colors ${isDark ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'}`}
+            >
+              <option value="All">All Transactions</option>
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending Dues</option>
+            </select>
+            <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-500'}`} />
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col min-h-0 p-6">
@@ -119,11 +124,15 @@ const BillingPage = () => {
                 <table className="w-full text-left">
                   <thead>
                     <tr className={`${isDark ? 'bg-slate-800/50 border-b border-slate-800' : 'bg-gray-50 border-b border-gray-200'}`}>
-                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Invoice ID</th>
-                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>User</th>
+                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Payment ID</th>
+                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer</th>
+                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Plan</th>
+
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Amount</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</th>
-                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider text-right ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Date</th>
+                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Date</th>
+                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Type</th>
+
                     </tr>
                   </thead>
                   <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-gray-200'}`}>
@@ -133,17 +142,20 @@ const BillingPage = () => {
                           <td className={`py-4 px-6 font-mono text-xs ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.id}</td>
                           <td className={`py-4 px-6 font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{tx.user}</td>
                           <td className={`py-4 px-6 font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{tx.amount}</td>
+
+                          <td className={`py-4 px-6 font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{tx.amount}</td>
                           <td className="py-4 px-6">
-                              <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                                  tx.status === 'Paid' 
-                                      ? (isDark ? 'text-green-400 bg-green-500/10 border border-green-500/20' : 'bg-green-50 text-green-700 border border-green-200')
-                                      : (isDark ? 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20' : 'bg-yellow-50 text-yellow-700 border border-yellow-200')
+                            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${tx.status === 'Paid'
+                              ? (isDark ? 'text-green-400 bg-green-500/10 border border-green-500/20' : 'bg-green-50 text-green-700 border border-green-200')
+                              : (isDark ? 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20' : 'bg-yellow-50 text-yellow-700 border border-yellow-200')
                               }`}>
-                                  {tx.status === 'Paid' && <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 inline-block"></span>}
-                                  {tx.status}
-                              </span>
+                              {tx.status === 'Paid' && <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 inline-block"></span>}
+                              {tx.status}
+                            </span>
                           </td>
-                          <td className={`py-4 px-6 text-right text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.date}</td>
+                          <td className={`py-4 px-6  text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.date}</td>
+                          <td className={`py-4 px-6  text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.type}</td>
+
                         </tr>
                       ))
                     ) : (
@@ -188,15 +200,14 @@ const BillingPage = () => {
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  currentPage === 1
-                    ? isDark
-                      ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : isDark
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${currentPage === 1
+                  ? isDark
+                    ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : isDark
                     ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                }`}
+                  }`}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -219,15 +230,14 @@ const BillingPage = () => {
                         )}
                         <button
                           onClick={() => handlePageChange(page)}
-                          className={`min-w-[36px] px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                            currentPage === page
-                              ? isDark
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-blue-600 text-white'
-                              : isDark
+                          className={`min-w-[36px] px-3 py-2 rounded-lg text-sm font-medium transition-all ${currentPage === page
+                            ? isDark
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-blue-600 text-white'
+                            : isDark
                               ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
                               : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                          }`}
+                            }`}
                         >
                           {page}
                         </button>
@@ -239,15 +249,14 @@ const BillingPage = () => {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === paginationData.totalPages}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  currentPage === paginationData.totalPages
-                    ? isDark
-                      ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : isDark
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${currentPage === paginationData.totalPages
+                  ? isDark
+                    ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : isDark
                     ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                }`}
+                  }`}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

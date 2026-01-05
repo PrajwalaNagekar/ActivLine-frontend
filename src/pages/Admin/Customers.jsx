@@ -61,7 +61,7 @@ const SubscribersPage = () => {
   };
 
   const handleViewDetail = (subscriber) => {
-    navigate(`/subscribers/${subscriber.id}`, { state: { subscriber } });
+    navigate(`/customers-details/${subscriber.id}`, { state: { subscriber } });
   };
 
   const handleEditClick = (subscriber, e) => {
@@ -85,8 +85,9 @@ const SubscribersPage = () => {
   // };
   const handleViewClick = (subscriber, e) => {
     e.stopPropagation(); // prevents row click issues (important in tables)
+    console.log("debug");
 
-    navigate(`/subscribers/${subscriber.id}`, {
+    navigate(`/customer-details/${subscriber.id}`, {
       state: { subscriber }
     });
   };
@@ -181,10 +182,13 @@ const SubscribersPage = () => {
               <table className="w-full text-left">
                 <thead>
                   <tr className={`${isDark ? 'bg-slate-800/50 border-b border-slate-800' : 'bg-gray-50 border-b border-gray-200'}`}>
-                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>User Details</th>
+                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer ID</th>
+                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer Name</th>
+                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer Email</th>
+
                     <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Plan Info</th>
                     <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</th>
-                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Due Amount</th>
+                    {/* <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Due Amount</th> */}
                     <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider text-right ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Actions</th>
                   </tr>
                 </thead>
@@ -201,10 +205,18 @@ const SubscribersPage = () => {
                               {sub.name.charAt(0)}
                             </div>
                             <div className="min-w-0">
+
                               <div className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{sub.name}</div>
                               <div className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>{sub.id} • {sub.location}</div>
                             </div>
                           </div>
+                        </td>
+                        <td className="py-5 px-6">
+                          <div className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.plan}</div>
+                        </td>
+
+                        <td className="py-5 px-6">
+                          <div className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.plan}</div>
                         </td>
                         <td className="py-5 px-6">
                           <div className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.plan}</div>
@@ -221,7 +233,7 @@ const SubscribersPage = () => {
                             {sub.status}
                           </span>
                         </td>
-                        <td className={`py-5 px-6 font-semibold text-sm ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.due}</td>
+                        {/* <td className={`py-5 px-6 font-semibold text-sm ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.due}</td> */}
                         <td className="py-5 px-6">
                           <div className="flex items-center justify-end gap-2">
                             <button
@@ -314,13 +326,14 @@ const SubscribersPage = () => {
                       )}
                       <button
                         onClick={() => handlePageChange(page)}
-                        className={`min-w-[36px] px-3 py-2 rounded-lg text-sm font-medium transition-all ${currentPage === page
-                          ? isDark
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-blue-600 text-white'
-                          : isDark
-                            ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
-                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border
+        ${currentPage === page
+                            ? isDark
+                              ? 'bg-blue-600 text-white border-blue-500'
+                              : 'bg-purple-600 text-white border-purple-500'
+                            : isDark
+                              ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                              : 'border-purple-200 text-purple-700 hover:bg-purple-50'
                           }`}
                       >
                         {page}

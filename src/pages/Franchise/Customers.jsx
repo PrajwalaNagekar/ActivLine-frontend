@@ -60,23 +60,22 @@ const MySubscribers = ({ onUpdateCash }) => {
                   </td>
                   <td className={`py-4 px-4 text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{sub.plan}</td>
                   <td className="py-4 px-4">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                      sub.status === 'Active' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
-                    }`}>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${sub.status === 'Active' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'
+                      }`}>
                       {sub.status}
                     </span>
                   </td>
                   <td className={`py-4 px-4 text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>₹{sub.due}</td>
                   <td className="py-4 px-4 text-right">
                     {sub.due > 0 ? (
-                      <button 
+                      <button
                         onClick={() => handleCollect(sub.id, sub.due)}
                         className="text-blue-400 hover:text-blue-300 text-xs font-medium mr-3 border border-blue-500/30 px-2 py-1 rounded hover:bg-blue-500/10"
                       >
                         Collect Cash
                       </button>
                     ) : (
-                      <span className="text-green-500 text-xs mr-3 flex items-center inline-flex"><CheckCircle className="w-3 h-3 mr-1"/> Paid</span>
+                      <span className="text-green-500 text-xs mr-3 flex items-center inline-flex"><CheckCircle className="w-3 h-3 mr-1" /> Paid</span>
                     )}
                     <button className={isDark ? 'text-slate-500 hover:text-white' : 'text-gray-500 hover:text-gray-900'}><MoreVertical className="w-4 h-4" /></button>
                   </td>
@@ -92,26 +91,26 @@ const MySubscribers = ({ onUpdateCash }) => {
           <div className={`rounded-xl w-full max-w-md border p-6 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
             <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>New Installation</h3>
             <div className="space-y-4">
-              <input 
-                placeholder="Customer Name" 
+              <input
+                placeholder="Customer Name"
                 className={`w-full p-2 rounded border outline-none focus:border-orange-500 ${isDark ? 'bg-slate-800 text-white border-slate-700' : 'bg-white text-gray-900 border-gray-300'}`}
                 value={newSub.name}
-                onChange={e => setNewSub({...newSub, name: e.target.value})}
+                onChange={e => setNewSub({ ...newSub, name: e.target.value })}
               />
-              <select 
+              <select
                 className={`w-full p-2 rounded border outline-none focus:border-orange-500 ${isDark ? 'bg-slate-800 text-white border-slate-700' : 'bg-white text-gray-900 border-gray-300'}`}
                 value={newSub.plan}
-                onChange={e => setNewSub({...newSub, plan: e.target.value})}
+                onChange={e => setNewSub({ ...newSub, plan: e.target.value })}
               >
                 <option>Basic 100</option>
                 <option>GigaStream 300</option>
                 <option>Business 1Gbps</option>
               </select>
-              <input 
-                placeholder="Address" 
+              <input
+                placeholder="Address"
                 className={`w-full p-2 rounded border outline-none focus:border-orange-500 ${isDark ? 'bg-slate-800 text-white border-slate-700' : 'bg-white text-gray-900 border-gray-300'}`}
                 value={newSub.location}
-                onChange={e => setNewSub({...newSub, location: e.target.value})}
+                onChange={e => setNewSub({ ...newSub, location: e.target.value })}
               />
             </div>
             <div className="flex justify-end gap-2 mt-6">

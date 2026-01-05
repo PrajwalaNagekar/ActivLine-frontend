@@ -96,13 +96,13 @@ const LoginPage = () => {
       {/* Floating Glow Shapes Background */}
       <div className="absolute inset-0 overflow-hidden">
         {/* Large floating orb - top left */}
-        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl animate-pulse"></div>
+        <div className={`absolute -top-40 -left-40 h-96 w-96 rounded-full blur-3xl animate-pulse ${isDark ? 'bg-blue-500/20' : 'bg-purple-500/30'}`}></div>
 
         {/* Medium floating orb - bottom right */}
-        <div className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-purple-500/15 blur-3xl animate-pulse" style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
+        <div className={`absolute -bottom-32 -right-32 h-80 w-80 rounded-full blur-3xl animate-pulse ${isDark ? 'bg-purple-500/15' : 'bg-fuchsia-500/20'}`} style={{ animationDelay: '1s', animationDuration: '4s' }}></div>
 
         {/* Small floating orb - center right */}
-        <div className="absolute top-1/2 right-1/4 h-64 w-64 rounded-full bg-cyan-500/10 blur-2xl animate-pulse" style={{ animationDelay: '2s', animationDuration: '5s' }}></div>
+        <div className={`absolute top-1/2 right-1/4 h-64 w-64 rounded-full blur-2xl animate-pulse ${isDark ? 'bg-cyan-500/10' : 'bg-violet-500/20'}`} style={{ animationDelay: '2s', animationDuration: '5s' }}></div>
 
         {/* Glowing Grid pattern overlay */}
         <div className="absolute inset-0">
@@ -152,8 +152,8 @@ const LoginPage = () => {
       </div>
 
       {/* Main Login Card */}
-      <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in duration-500">
-        <div className={`relative rounded-2xl border p-8 shadow-2xl backdrop-blur-xl ${isDark ? 'border-white/10 bg-slate-900/40' : 'border-gray-200/50 bg-white/90'}`}>
+      <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in duration-500 ">
+        <div className={`relative rounded-3xl border-2 p-8 shadow-2xl backdrop-blur-xl ${isDark ? 'border-white/10 bg-slate-900/40' : 'border-purple-300/80 bg-white/90 ring-4 ring-purple-100/50'}`}>
           {/* Inner glow effect */}
           <div className={`absolute inset-0 rounded-2xl opacity-50 ${isDark ? 'bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5' : 'bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50'}`}></div>
 
@@ -337,7 +337,7 @@ const LoginPage = () => {
                           Password
                         </label>
                         <span className={`text-xs cursor-pointer transition-colors ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}>
-                      
+
                           <Link to="/forgot-password">Forgot password?</Link>
                         </span>
                       </div>
@@ -381,7 +381,10 @@ const LoginPage = () => {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 py-3.5 font-bold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:from-blue-500 hover:to-blue-400 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      className={`group relative w-full overflow-hidden rounded-xl py-3.5 font-bold text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 ${isDark
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-blue-500/25 hover:from-blue-500 hover:to-blue-400 hover:shadow-blue-500/30'
+                        : 'bg-gradient-to-r from-purple-600 to-fuchsia-600 shadow-purple-500/25 hover:from-purple-500 hover:to-fuchsia-500 hover:shadow-purple-500/30'
+                        }`}
                     >
                       {/* Button glow effect */}
                       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>

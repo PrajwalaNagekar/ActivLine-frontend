@@ -85,14 +85,37 @@ const MainLayout = () => {
   const activeTab = getActiveTab();
   const isAdminUser = isAdmin();
 
-  const theme = {
-    primary: isAdminUser ? "blue" : "orange",
-    primaryBg: isAdminUser ? "bg-blue-500" : "bg-orange-500",
-    primaryText: isAdminUser ? "text-blue-400" : "text-orange-400",
-    hoverBg: isAdminUser ? "hover:bg-blue-500/10" : "hover:bg-orange-500/10",
-    ring: isAdminUser ? "ring-blue-500/20" : "ring-orange-500/20",
-    border: isAdminUser ? "border-blue-500/50" : "border-orange-500/50",
+  const getTheme = () => {
+    if (!isDark) {
+      // Light Mode - Purple Theme for Everyone
+      return {
+        primary: "purple",
+        primaryBg: "bg-purple-600",
+        primaryText: "text-purple-600",
+        hoverBg: "hover:bg-purple-50",
+        activeBg: "bg-purple-50",
+        ring: "ring-purple-500/20",
+        border: "border-purple-200",
+        sidebarBorder: "border-r border-purple-100",
+        sidebarBg: "bg-white/80 backdrop-blur-xl",
+      };
+    }
+
+    // Dark Mode - Keep original role-based colors or enhance them
+    return {
+      primary: isAdminUser ? "blue" : "orange",
+      primaryBg: isAdminUser ? "bg-blue-500" : "bg-orange-500",
+      primaryText: isAdminUser ? "text-blue-400" : "text-orange-400",
+      hoverBg: isAdminUser ? "hover:bg-blue-500/10" : "hover:bg-orange-500/10",
+      activeBg: isAdminUser ? "bg-blue-500/10" : "bg-orange-500/10",
+      ring: isAdminUser ? "ring-blue-500/20" : "ring-orange-500/20",
+      border: isAdminUser ? "border-blue-500/20" : "border-orange-500/20",
+      sidebarBorder: "border-r border-slate-800",
+      sidebarBg: "bg-slate-900",
+    };
   };
+
+  const theme = getTheme();
 
   // Define sidebar items based on role
   // const adminSidebarItems = [
@@ -133,13 +156,11 @@ const MainLayout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 ${
-          sidebarCollapsed ? 'w-20' : 'w-64'
-        } border-r flex flex-col flex-shrink-0 z-50 transform transition-all duration-300 ease-in-out ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        } ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}
+        className={`fixed md:static inset-y-0 left-0 ${sidebarCollapsed ? 'w-20' : 'w-72'
+          } flex flex-col flex-shrink-0 z-50 transform transition-all duration-300 ease-cubic-bezier(0.4, 0, 0.2, 1) ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          } ${theme.sidebarBg} ${theme.sidebarBorder}`}
       >
-        <div className={`h-16 flex items-center justify-between px-4 md:px-6 border-b ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
+        <div className={`h-20 flex items-center justify-between px-6 border-b ${isDark ? 'border-slate-800' : 'border-purple-100/50'}`}>
           {!sidebarCollapsed && (
             <ActivlineLogo className={`h-10 w-auto ${isDark ? 'text-white' : 'text-gray-900'}`} />
           )}
@@ -202,7 +223,7 @@ const MainLayout = () => {
             />
           ))}
         </nav> */}
-        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-6 px-4 space-y-1.5 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-200 scrollbar-track-transparent">
           {sidebarItems.map((item) => (
             <SidebarItem
               key={item.key}
@@ -215,6 +236,7 @@ const MainLayout = () => {
               }}
               role={user?.role}
               collapsed={sidebarCollapsed}
+              isDark={isDark} // Pass theme state
             />
           ))}
         </nav>
@@ -256,7 +278,7 @@ const MainLayout = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 md:ml-0">
         {/* Header */}
-        <header className={`h-16 border-b flex justify-between items-center px-4 md:px-8 shadow-sm z-30 flex-shrink-0 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+        <header className={`h-20 border-b flex justify-between items-center px-4 md:px-8 shadow-sm z-30 flex-shrink-0 backdrop-blur-md sticky top-0 ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white/80 border-purple-100'}`}>
           <button
             onClick={toggleSidebar}
             className={`md:hidden p-2 rounded-lg transition-colors ${isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}
@@ -286,7 +308,7 @@ const MainLayout = () => {
         </header>
 
         {/* Content Area */}
-        <div className={`flex-1 p-4 md:p-8 ${isDark ? 'bg-slate-950' : 'bg-gray-50'}`}>
+        <div className={`flex-1 p-4 md:p-8 ${isDark ? 'bg-slate-950' : 'bg-gray-100'}`}>
           <div className="max-w-7xl mx-auto">
             <Breadcrumb />
             <Outlet />
