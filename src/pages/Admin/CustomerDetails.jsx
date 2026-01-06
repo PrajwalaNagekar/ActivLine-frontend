@@ -1,22 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FileText } from 'lucide-react';
+import { Mail, Phone, MapPin, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
-const SubscriberDetailPage = () => {
+const CustomerDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
-  const subscriber = location.state?.subscriber;
+  // Renamed variable from subscriber to customer as requested
+  const customer = location.state?.customer || location.state?.subscriber; // Fallback for backward compatibility
 
-  if (!subscriber) {
+  const [notes, setNotes] = useState('');
+
+  // Mock Data for UI demonstration
+  const paymentHistory = [
+    { id: 1, date: '2025-11-18', description: 'ActivLine Home 200 (Renewal)', amount: '₹999.00', status: 'Paid' },
+    { id: 2, date: '2025-10-18', description: 'ActivLine Home 200 (Renewal)', amount: '₹999.00', status: 'Paid' },
+  ];
+
+  const supportTickets = [
+    { id: '#7890', date: '3h ago', subject: 'Internet connection dropping', status: 'In Progress' },
+  ];
+
+  if (!customer) {
     return (
       <div className="space-y-6">
-        <button onClick={() => navigate('/subscribers')} className={`flex items-center text-sm transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
-          <span className="mr-1">←</span> Back to List
+        <button
+          onClick={() => navigate('/subscribers')}
+          className={`group flex items-center text-sm font-medium transition-colors ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-700'
+            }`}
+        >
+          <ArrowLeft className="w-4 h-4 mr-1 transition-transform group-hover:-translate-x-1" />
+          Back to Customers
         </button>
         <div className={`rounded-xl shadow-sm border p-6 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-          <p className={isDark ? 'text-white' : 'text-gray-900'}>Subscriber not found</p>
+          <p className={isDark ? 'text-white' : 'text-gray-900'}>Customer not found</p>
         </div>
       </div>
     );
@@ -24,78 +42,168 @@ const SubscriberDetailPage = () => {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <button onClick={() => navigate('/subscribers')} className={`flex items-center text-sm transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
-        <span className="mr-1">←</span> Back to List
-      </button>
-      <div className={`rounded-xl shadow-sm border p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-2xl font-bold">{subscriber.name.charAt(0)}</div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{subscriber.name}</h1>
-              <span className="px-2 py-0.5 bg-green-500/10 text-green-400 text-xs font-bold rounded uppercase">{subscriber.status}</span>
-            </div>
-            <p className={`text-sm mt-1 ${isDark ? 'text-slate-500' : 'text-gray-600'}`}>alex@example.com • +91 95765 43210</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 text-right">
-          <div>
-            <div className={`text-xs uppercase font-medium ${isDark ? 'text-slate-500' : 'text-gray-600'}`}>Total Due</div>
-            <div className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>₹0</div>
-            <div className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-600'}`}>Customer ID: {subscriber.id}</div>
-          </div>
-          <div className="flex gap-2">
-            <button className={`px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${isDark ? 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700' : 'bg-gray-100 text-gray-900 border-gray-300 hover:bg-gray-200'}`}>Reset Password</button>
-            <button className="px-4 py-2 bg-red-500/10 text-red-400 text-sm font-medium rounded-lg hover:bg-red-500/20 border border-red-500/20">Suspend User</button>
-          </div>
+      {/* Header Section */}
+      <div className="flex flex-col gap-4">
+        <button
+          onClick={() => navigate('/subscribers')}
+          className={`w-fit group flex items-center text-sm font-medium transition-colors ${isDark ? 'text-violet-400 hover:text-violet-300' : 'text-violet-600 hover:text-violet-700'
+            }`}
+        >
+          <ArrowLeft className="w-4 h-4 mr-1 transition-transform group-hover:-translate-x-1" />
+          Back to Customers
+        </button>
+
+        <div className="flex justify-between items-center">
+          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            {customer.name}
+          </h1>
+          <span className={`px-4 py-1.5 rounded-full text-sm font-medium ${customer.status === 'Active'
+            ? 'bg-green-500/10 text-green-500'
+            : 'bg-red-500/10 text-red-500'
+            }`}>
+            {customer.status || 'Active'}
+          </span>
         </div>
       </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className={`rounded-xl shadow-sm border overflow-hidden ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-            <div className={`flex border-b ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
-              <button className="px-6 py-3 text-sm font-medium text-blue-400 border-b-2 border-blue-500">Overview</button>
-              <button className={`px-6 py-3 text-sm font-medium transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>Plan & Usage</button>
-              <button className={`px-6 py-3 text-sm font-medium transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>Support Queries</button>
-              <button className={`px-6 py-3 text-sm font-medium transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>Billing</button>
-            </div>
-            <div className="p-6">
-              <h3 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Address & Installation</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p className={`text-xs uppercase font-medium mb-1 ${isDark ? 'text-slate-500' : 'text-gray-600'}`}>Installation Address</p>
-                  <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Flat 402, Palm Grove Apts, 12th Main, Indiranagar, Bangalore - 560038</p>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className={`text-xs uppercase font-medium mb-1 ${isDark ? 'text-slate-500' : 'text-gray-600'}`}>Installation Date</p>
-                    <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>12 Jan 2022</p>
-                  </div>
-                  <div>
-                    <p className={`text-xs uppercase font-medium mb-1 ${isDark ? 'text-slate-500' : 'text-gray-600'}`}>Assigned Node / OLT</p>
-                    <p className={`text-sm text-blue-300 font-medium font-mono inline-block px-2 py-1 rounded border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-gray-100 border-gray-300'}`}>OLT-BLR-IND-84 / Port 12</p>
-                  </div>
-                </div>
+        {/* Left Column - Details */}
+        <div className="space-y-6 lg:col-span-1">
+
+          {/* Contact Information */}
+          <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+            <h3 className={`text-lg font-semibold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>Contact Information</h3>
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Mail className={`w-5 h-5 mt-0.5 ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
+                <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                  {customer.email || 'sathya.kumar@example.com'}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone className={`w-5 h-5 ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
+                <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                  {customer.phone || '555-1234'}
+                </span>
+              </div>
+              <div className="flex items-start gap-3">
+                <MapPin className={`w-5 h-5 mt-0.5 ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
+                <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                  {customer.address || '123 Main St, Anytown, USA'}
+                </span>
               </div>
             </div>
           </div>
-        </div>
-        <div className={`rounded-xl shadow-sm border p-6 h-fit ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-          <h3 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>KYC Documents</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className={`aspect-[3/4] rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${isDark ? 'bg-slate-800/50 border-slate-700 text-slate-500 hover:bg-slate-800 hover:text-slate-300' : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}>
-              <FileText className="w-8 h-8 mb-2" />
-              <span className="text-xs font-medium">Aadhaar Front</span>
+
+          {/* Current Plan */}
+          <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+            <h3 className={`text-lg font-semibold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>Current Plan</h3>
+            <div className="mb-6">
+              <p className={`text-lg font-bold mb-1 ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
+                {customer.planName || 'ActivLine Home 200'}
+              </p>
+              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                Device/Modem ID: {customer.deviceId || 'M-XYZ-789'}
+              </p>
             </div>
-            <div className={`aspect-[3/4] rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors ${isDark ? 'bg-slate-800/50 border-slate-700 text-slate-500 hover:bg-slate-800 hover:text-slate-300' : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-900'}`}>
-              <FileText className="w-8 h-8 mb-2" />
-              <span className="text-xs font-medium">Aadhaar Back</span>
+            <button className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20">
+              Change Plan
+            </button>
+          </div>
+
+          {/* Admin Notes */}
+          <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+            <h3 className={`text-lg font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Admin Notes</h3>
+            <div className="relative mb-4">
+              <textarea
+                className={`w-full h-32 p-4 rounded-xl border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all ${isDark
+                  ? 'bg-slate-800/50 border-slate-700 text-slate-300 placeholder-slate-500'
+                  : 'bg-gray-50 border-gray-200 text-gray-700 placeholder-gray-400'
+                  }`}
+                placeholder="Add notes for this customer..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+              <div className="absolute bottom-3 right-3 text-slate-400 pointer-events-none">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 9L9 1M9 9L5 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+            <button className="px-6 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-sm font-medium rounded-lg transition-colors shadow-lg shadow-violet-500/20">
+              Save Note
+            </button>
+          </div>
+
+        </div>
+
+        {/* Right Column - History & Logs */}
+        <div className="space-y-6 lg:col-span-2">
+
+          {/* Payment History */}
+          <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+            <h3 className={`text-lg font-semibold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>Payment History</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className={`border-b ${isDark ? 'border-slate-800 text-slate-400' : 'border-gray-100 text-gray-400'} uppercase text-xs`}>
+                    <th className="py-3 font-semibold tracking-wider">Date</th>
+                    <th className="py-3 font-semibold tracking-wider">Description</th>
+                    <th className="py-3 font-semibold tracking-wider">Amount</th>
+                    <th className="py-3 font-semibold tracking-wider text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-gray-100'}`}>
+                  {paymentHistory.map((payment) => (
+                    <tr key={payment.id} className="group">
+                      <td className={`py-4 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{payment.date}</td>
+                      <td className={`py-4 font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{payment.description}</td>
+                      <td className={`py-4 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{payment.amount}</td>
+                      <td className="py-4 text-right">
+                        <span className="px-3 py-1 bg-green-500/10 text-green-500 text-xs font-bold rounded-full">
+                          {payment.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
+
+          {/* Support Tickets */}
+          <div className={`p-6 rounded-2xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
+            <h3 className={`text-lg font-semibold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>Support Tickets</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className={`border-b ${isDark ? 'border-slate-800 text-slate-400' : 'border-gray-100 text-gray-400'} uppercase text-xs`}>
+                    <th className="py-3 font-semibold tracking-wider">Date</th>
+                    <th className="py-3 font-semibold tracking-wider">Subject</th>
+                    <th className="py-3 font-semibold tracking-wider text-right">Status</th>
+                  </tr>
+                </thead>
+                <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-gray-100'}`}>
+                  {supportTickets.map((ticket) => (
+                    <tr key={ticket.id}>
+                      <td className={`py-4 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{ticket.date}</td>
+                      <td className={`py-4 font-medium ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>{ticket.id} - {ticket.subject}</td>
+                      <td className="py-4 text-right">
+                        <span className="px-3 py-1 bg-amber-500/10 text-amber-500 text-xs font-bold rounded-full">
+                          {ticket.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
   );
 };
 
-export default SubscriberDetailPage;
+export default CustomerDetails;
