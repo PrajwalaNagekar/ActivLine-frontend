@@ -32,7 +32,12 @@ const LoginPage = () => {
       email: "sathya@activline-franchise.in",
       password: "franchise123",
     },
+    staff: {
+      email: "staff@activline.in",
+      password: "staff123",
+    },
   };
+
 
 
   const getInitialValues = () => ({
@@ -47,47 +52,66 @@ const LoginPage = () => {
 
       let loggedInRole = null;
 
-      if (
-        values.email === roleCredentials.admin.email &&
-        values.password === roleCredentials.admin.password
-      ) {
-        loggedInRole = "admin";
-      } else if (
-        values.email === roleCredentials.franchise.email &&
-        values.password === roleCredentials.franchise.password
-      ) {
-        loggedInRole = "franchise";
-      }
+      Object.keys(roleCredentials).forEach((role) => {
+        if (
+          values.email === roleCredentials[role].email &&
+          values.password === roleCredentials[role].password
+        ) {
+          loggedInRole = role;
+        }
+      });
 
       if (!loggedInRole) {
         throw new Error("Invalid email or password");
       }
 
       const userData = {
-        id: loggedInRole === "admin" ? "1" : "2",
+        id:
+          loggedInRole === "admin"
+            ? "1"
+            : loggedInRole === "franchise"
+              ? "2"
+              : "3",
         email: values.email,
-        name: loggedInRole === "admin" ? "Super Admin" : "Franchise Admin",
+        name:
+          loggedInRole === "admin"
+            ? "Super Admin"
+            : loggedInRole === "franchise"
+              ? "Franchise Admin"
+              : "Staff User",
         role: loggedInRole,
         ...(loggedInRole === "franchise" && { franchiseId: "FR-101" }),
+        ...(loggedInRole === "staff" && { staffId: "ST-201" }),
       };
 
       const token = "dummy-jwt-token";
 
+      // ✅ STORE IN LOCAL STORAGE
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("authUser", JSON.stringify(userData));
+
+      // optional if your context already does this
       login(userData, token);
 
       toast.success("Login successful 🚀");
 
-      navigate(
-        loggedInRole === "admin"
-          ? "/admin/dashboard"
-          : "/franchise-dashboard"
-      );
+      // ✅ ROLE BASED ROUTING
+      if (loggedInRole === "admin") {
+        navigate("/admin/dashboard");
+      } else if (loggedInRole === "franchise") {
+        navigate("/franchise-dashboard");
+      } else {
+        console.log("inside else");
+        
+        navigate("/staff/dashboard");
+      }
     } catch (error) {
       toast.error(error.message || "Login failed");
     } finally {
       setSubmitting(false);
     }
   };
+
 
 
 
@@ -402,12 +426,7 @@ const LoginPage = () => {
               )}
             </Formik>
 
-            {/* Footer */}
-            {/* <div className="mt-6 text-center">
-              <p className="text-xs text-slate-500">
-                Protected by Activline Secure Access
-              </p>
-            </div> */}
+
           </div>
         </div>
       </div>

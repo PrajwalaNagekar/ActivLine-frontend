@@ -25,6 +25,7 @@ import ThemeToggle from '../components/ThemeToggle';
 import {
   adminSidebarItems,
   franchiseSidebarItems,
+  staffSidebarItems,
 } from "../config/Sidebar.config";
 
 
@@ -137,12 +138,24 @@ const MainLayout = () => {
   //   { icon: Settings, label: 'Profile', path: '/profile', key: 'Settings' },
   // ];
 
-  const sidebarItems = isAdmin() ? adminSidebarItems : franchiseSidebarItems;
-  const isItemActive = (item) =>
+  const sidebarItemsMap = {
+    admin: adminSidebarItems,
+    franchise: franchiseSidebarItems,
+    staff: staffSidebarItems,
+  };
+
+  const sidebarItems = sidebarItemsMap[user?.role] || []; const isItemActive = (item) =>
     item.paths.some((path) => location.pathname.startsWith(path));
 
   const userDisplayName = user?.name || 'User';
-  const userRole = user?.role === 'admin' ? 'Super Admin' : 'Franchise Admin';
+  const userRole =
+    user?.role === 'admin'
+      ? 'Super Admin'
+      : user?.role === 'franchise'
+        ? 'Franchise Admin'
+        : user?.role === 'staff'
+          ? 'Staff'
+          : 'User';
 
   return (
     <div className={`flex min-h-screen font-sans ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-gray-50 text-gray-900'}`}>

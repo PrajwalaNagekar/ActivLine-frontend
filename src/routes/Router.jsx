@@ -6,7 +6,7 @@ import MainLayout from '../layout/MainLayout';
 import SubscriberDetailPage from '../pages/Admin/CustomerDetails';
 import SubscribersPage from '../pages/Admin/Customers';
 
-// Lazy load pages
+// Admin
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
 const DashboardPage = lazy(() => import('../pages/Admin/DashboardPage'));
 const Customers = lazy(() => import('../pages/Admin/Customers'));
@@ -23,13 +23,18 @@ const SettingsPage = lazy(() => import('../pages/Admin/SettingsPage'));
 const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
 const FranchisePage = lazy(() => import('../pages/Admin/Franchise'));
 
-
+//franchise
 const FranchiseDashboard = lazy(() => import('../pages/Franchise/Dashboard'));
 // const Mysubscribers = lazy(() => import('../pages/Franchise/Customers'));
 const LocalStaff = lazy(() => import('../pages/Franchise/LocalStaff'));
 const Collections = lazy(() => import('../pages/Franchise/Collections'));
 // const ZoneSupport = lazy(() => import('../pages/Franchise/ZoneSupport'));
 const Profile = lazy(() => import('../pages/Franchise/Profile'));
+
+
+//staff
+const AssignedTickets=lazy(()=>import('../pages/Staff/AssignedTickets'))
+
 
 // Loading component
 const LoadingFallback = () => (
@@ -91,14 +96,14 @@ const Router = () => {
           <Route
             path="dashboard"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'staff']}>
                 <Suspense fallback={<LoadingFallback />}>
                   <DashboardPage />
                 </Suspense>
               </ProtectedRoute>
             }
           />
-          <Route
+          {/* <Route
             path="franchise"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
@@ -107,7 +112,7 @@ const Router = () => {
                 </Suspense>
               </ProtectedRoute>
             }
-          />
+          /> */}
           <Route
             path="franchise-dashboard"
             element={
@@ -224,7 +229,7 @@ const Router = () => {
           <Route
             path="reports"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'staff']}>
                 <Suspense fallback={<LoadingFallback />}>
                   <Reports />
                 </Suspense>
@@ -234,7 +239,7 @@ const Router = () => {
           <Route
             path="logs"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'staff']}>
                 <Suspense fallback={<LoadingFallback />}>
                   <Logs />
                 </Suspense>
@@ -244,7 +249,7 @@ const Router = () => {
           <Route
             path="plans"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'staff']}>
                 <Suspense fallback={<LoadingFallback />}>
                   <Plans />
                 </Suspense>
@@ -286,12 +291,21 @@ const Router = () => {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="assigned-tickets"
+            element={
+              <ProtectedRoute allowedRoles={['staff']}>
+                <Suspense fallback={<LoadingFallback />}>
+                  <AssignedTickets />
+                </Suspense>
+              </ProtectedRoute>
+            }
+          />
           {/* Settings - accessible to both admin and franchise */}
           <Route
             path="settings"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'staff']}>
                 <Suspense fallback={<LoadingFallback />}>
                   <SettingsPage />
                 </Suspense>

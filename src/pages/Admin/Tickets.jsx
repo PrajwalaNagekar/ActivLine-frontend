@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Send, Tag, AlertCircle, XCircle, ChevronDown, Menu, User, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import Chat from '../../components/chat/Chat';
 
 /* ---------------- MOCK DATA ---------------- */
 const STAFF_MEMBERS = [
@@ -277,141 +278,16 @@ const SupportPage = () => {
       </div>
 
       {/* MAIN CHAT AREA */}
-      <div className={`flex-1 flex flex-col relative ${isDark ? 'bg-[#0b141a]' : 'bg-gray-50'}`}>
-        {activeTicket ? (
-          <>
-            {/* Chat Header */}
-            <div className={`p-4 border-b shadow-sm z-10 flex flex-col gap-3 md:flex-row md:items-center md:justify-between ${containerClasses}`}>
-              <div className="flex items-center gap-3">
-                <button onClick={() => setShowSidebar(true)} className="md:hidden"><Menu className={`w-5 h-5 ${textSecondary}`} /></button>
+      <Chat
+        ticket={activeTicket}
+        staffList={STAFF_MEMBERS}
+        showAssignment={true}     // admin can assign
+        showStatus={true}
+        onSendMessage={handleSendMessage}
+        onAssigneeChange={handleAssigneeChange}
+        onStatusChange={handleStatusChange}
+      />
 
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${isDark ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-100 text-purple-600'}`}>
-                  {activeTicket.customerName.charAt(0)}
-                </div>
-
-                <div>
-                  <h3 className={`font-bold text-base ${textPrimary}`}>{activeTicket.issue}</h3>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className={isDark ? 'text-blue-300' : 'text-purple-600 font-medium'}>#{activeTicket.ticketId}</span>
-                    <span className={textSecondary}>• {activeTicket.customerName}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Header Controls (Dropdowns) */}
-              <div className="flex items-center gap-3">
-                {/* Assigned To */}
-                <div className="relative">
-                  <select
-                    value={activeTicket.assignedTo || ""}
-                    onChange={(e) => handleAssigneeChange(e.target.value)}
-                    className={`pl-8 pr-4 py-1.5 text-xs rounded-lg border outline-none appearance-none cursor-pointer focus:ring-1 transition-all ${isDark ? 'bg-slate-800 border-slate-700 text-white focus:ring-blue-500' : 'bg-white border-gray-200 text-gray-700 focus:ring-purple-500 hover:border-purple-300'}`}
-                  >
-                    <option value="">Unassigned</option>
-                    {STAFF_MEMBERS.map(staff => (
-                      <option key={staff.id} value={staff.id}>{staff.name}</option>
-                    ))}
-                  </select>
-                  <User className={`absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 ${textSecondary}`} />
-                </div>
-
-                {/* Status */}
-                <div className="relative">
-                  <select
-                    value={activeTicket.status}
-                    onChange={(e) => handleStatusChange(e.target.value)}
-                    className={`pl-3 pr-8 py-1.5 text-xs font-semibold rounded-full border outline-none appearance-none cursor-pointer transition-all ${getStatusColor(activeTicket.status, isDark)}`}
-                  >
-                    <option value="Open">Open</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Resolved">Resolved</option>
-                    <option value="Closed">Closed</option>
-                  </select>
-                  <ChevronDown className={`absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-50`} />
-                </div>
-              </div>
-            </div>
-
-            {/* Messages List */}
-            <div className={`flex-1 p-4 md:p-6 overflow-y-auto space-y-4 ${isDark ? 'bg-[#0b141a]' : 'bg-white/50 backdrop-blur-sm'}`}>
-              <div className="flex justify-center">
-                <span className={`text-[10px] px-3 py-1 rounded-full shadow-sm border ${isDark ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>Today</span>
-              </div>
-
-              {activeTicket.messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.sender === 'agent' ? 'justify-end' : 'justify-start'}`}>
-                  {msg.sender === 'system' ? (
-                    <div className="w-full flex justify-center my-2">
-                      <div className={`px-4 py-1.5 rounded-full text-xs font-medium flex items-center gap-2 border ${isDark ? 'bg-slate-800/50 text-slate-400 border-slate-700' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
-                        <AlertCircle className="w-3 h-3" /> {msg.text}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className={`p-3.5 rounded-2xl shadow-sm max-w-[85%] md:max-w-md border text-sm relative group ${msg.sender === 'agent'
-                      ? (isDark ? 'bg-blue-600 border-blue-500 text-white rounded-br-none' : 'bg-purple-600 border-purple-500 text-white rounded-br-none')
-                      : (isDark ? 'bg-slate-800 border-slate-700 text-slate-200 rounded-bl-none' : 'bg-white border-gray-200 text-gray-800 rounded-bl-none')
-                      }`}>
-                      <p className="leading-relaxed">{msg.text}</p>
-                      <span className={`text-[10px] block text-right mt-1 opacity-70 ${msg.sender === 'agent' ? 'text-white' : ''}`}>
-                        {msg.time}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Area */}
-            <div className={`p-4 border-t ${containerClasses}`}>
-              <div className="flex gap-2 mb-3 overflow-x-auto pb-2 scrollbar-hide">
-                {['Greeting', 'Router Reset', 'Ticket Created'].map(template => (
-                  <button
-                    key={template}
-                    onClick={() => setInputMsg(template === 'Greeting' ? "Hello! How can I help you today?" : template === 'Router Reset' ? "Please try restarting your router." : "I have created a ticket for this issue.")}
-                    className={`whitespace-nowrap px-3 py-1 border text-xs rounded-full transition-colors flex-shrink-0 ${isDark ? 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700' : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 hover:text-gray-900'}`}
-                  >
-                    {template}
-                  </button>
-                ))}
-              </div>
-              <form
-                className="flex items-center gap-2"
-                onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
-              >
-                <input
-                  type="text"
-                  value={inputMsg}
-                  onChange={(e) => setInputMsg(e.target.value)}
-                  placeholder="Type your reply..."
-                  className={`flex-1 border rounded-lg py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-purple-500/20 transition-all ${inputClasses} ${!isDark && 'focus:border-purple-400'}`}
-                />
-                <button
-                  type="submit"
-                  className={`p-3 rounded-lg text-white shadow-lg transition-all active:scale-95 ${isDark ? 'bg-blue-600 hover:bg-blue-500 shadow-blue-500/20' : 'bg-purple-600 hover:bg-purple-500 shadow-purple-500/20'}`}
-                >
-                  <Send className="w-5 h-5" />
-                </button>
-              </form>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 opacity-50">
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-slate-800 text-slate-600' : 'bg-gray-100 text-gray-300'}`}>
-              <Tag className="w-10 h-10" />
-            </div>
-            <h3 className={`text-lg font-bold mb-2 ${textPrimary}`}>No Ticket Selected</h3>
-            <p className={`text-sm max-w-xs ${textSecondary}`}>Select a ticket from the sidebar to view details and chat with the customer.</p>
-
-            <button
-              onClick={() => setShowTicketModal(true)}
-              className={`mt-6 px-6 py-2.5 rounded-lg text-sm font-semibold text-white shadow-lg transition-transform hover:scale-105 active:scale-95 ${isDark ? 'bg-blue-600 hover:bg-blue-500' : 'bg-purple-600 hover:bg-purple-500'}`}
-            >
-              Create New Ticket
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* CREATE TICKET MODAL */}
       {showTicketModal && (

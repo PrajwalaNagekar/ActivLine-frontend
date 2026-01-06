@@ -126,3 +126,42 @@ export const franchiseSidebarItems = [
     paths: ["/profile"],
   },
 ];
+
+export const staffSidebarItems = [
+  {
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    key: "Dashboard",
+    paths: ["/dashboard"],
+  },
+  {
+    icon: MessageSquare,
+    label: "Assigned Tickets",
+    key: "Assigned Tickets",
+    paths: ["/assigned-tickets"],
+  },
+  {
+    icon: Users,
+    label: "Customers",
+    key: "Customers",
+    paths: ["/customers"],
+  },
+  {
+    icon: ChartNoAxesColumnIncreasing,
+    label: "Reports",
+    key: "Reports",
+    paths: ["/reports"],
+  },
+  {
+    icon: FileClock,
+    label: "Logs",
+    key: "Logs",
+    paths: ["/logs"],
+  },
+  {
+    icon: Settings,
+    label: "Settings",
+    key: "Settings",
+    paths: ["/settings"],
+  },
+]
