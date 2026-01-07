@@ -14,10 +14,22 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext"; // Adjust the import path as needed
+import { useTheme } from "../../../context/ThemeContext";
+import { topCardsData, lightModeCardData, recentTickets, recentPayments, lightModeAvatarColors } from "../../../data/dashboardData";
 
 const DashboardPage = () => {
   const { theme, toggleTheme, isDark } = useTheme();
+
+  // Get icon component by name
+  const getIconComponent = (iconName) => {
+    const icons = {
+      MessageSquare,
+      Clock,
+      DollarSign,
+      Users
+    };
+    return icons[iconName] || MessageSquare;
+  };
 
   return (
     <div className={`min-h-screen p-6 ${isDark ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-50 to-gray-100'}`}>
@@ -27,52 +39,28 @@ const DashboardPage = () => {
           <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dashboard</h1>
           <p className={`mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Welcome back! Here's what's happening today.</p>
         </div>
-        
-       
       </div>
 
       {/* TOP CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <DashboardCard
-          title="Open Tickets"
-          value="12"
-          change="+2.5%"
-          icon={<MessageSquare className="h-6 w-6" />}
-          iconBg={isDark ? "bg-orange-900/30" : "bg-orange-100"}
-          iconColor={isDark ? "text-orange-400" : "text-orange-600"}
-          trend="up"
-          isDark={isDark}
-        />
-        <DashboardCard
-          title="In Progress"
-          value="8"
-          change="-1.2%"
-          icon={<Clock className="h-6 w-6" />}
-          iconBg={isDark ? "bg-blue-900/30" : "bg-blue-100"}
-          iconColor={isDark ? "text-blue-400" : "text-blue-600"}
-          trend="down"
-          isDark={isDark}
-        />
-        <DashboardCard
-          title="Revenue (Month)"
-          value="₹24,856"
-          change="+12.8%"
-          icon={<DollarSign className="h-6 w-6" />}
-          iconBg={isDark ? "bg-green-900/30" : "bg-green-100"}
-          iconColor={isDark ? "text-green-400" : "text-green-600"}
-          trend="up"
-          isDark={isDark}
-        />
-        <DashboardCard
-          title="Total Customers"
-          value="248"
-          change="+5.3%"
-          icon={<Users className="h-6 w-6" />}
-          iconBg={isDark ? "bg-purple-900/30" : "bg-purple-100"}
-          iconColor={isDark ? "text-purple-400" : "text-purple-600"}
-          trend="up"
-          isDark={isDark}
-        />
+        {topCardsData.map((card, index) => {
+          const IconComponent = getIconComponent(card.iconName);
+          const lightModeData = lightModeCardData[index] || {};
+          
+          return (
+            <DashboardCard
+              key={card.id}
+              title={card.title}
+              value={card.value}
+              change={card.change}
+              icon={<IconComponent className="h-6 w-6" />}
+              iconBg={isDark ? card.iconBg : lightModeData.iconBg}
+              iconColor={isDark ? card.iconColor : lightModeData.iconColor}
+              trend={card.trend}
+              isDark={isDark}
+            />
+          );
+        })}
       </div>
 
       {/* MAIN CONTENT */}
@@ -97,26 +85,14 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody className={isDark ? 'divide-y divide-gray-700' : 'divide-y divide-gray-200'}>
-                <TicketRow
-                  subject="#7890 - Internet connection dropping"
-                  customer="Sathya Kumar"
-                  isDark={isDark}
-                />
-                <TicketRow
-                  subject="#7891 - New connection request"
-                  customer="Alice Williams"
-                  isDark={isDark}
-                />
-                <TicketRow
-                  subject="#7889 - Question about my bill"
-                  customer="Jane Smith"
-                  isDark={isDark}
-                />
-                <TicketRow
-                  subject="#7888 - Service upgrade"
-                  customer="Bob Johnson"
-                  isDark={isDark}
-                />
+                {recentTickets.map((ticket) => (
+                  <TicketRow
+                    key={ticket.id}
+                    subject={`${ticket.ticketNumber} - ${ticket.subject}`}
+                    customer={ticket.customer}
+                    isDark={isDark}
+                  />
+                ))}
               </tbody>
             </table>
           </div>
@@ -143,41 +119,16 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody className={isDark ? 'divide-y divide-gray-700' : 'divide-y divide-gray-200'}>
-                <PaymentRow 
-                  name="Sathya Kumar" 
-                  amount="₹999.00" 
-                  status="Paid" 
-                  avatarColor={isDark ? "bg-blue-600" : "bg-blue-500"}
-                  isDark={isDark}
-                />
-                <PaymentRow 
-                  name="Jane Smith" 
-                  amount="₹499.00" 
-                  status="Paid" 
-                  avatarColor={isDark ? "bg-pink-600" : "bg-pink-500"}
-                  isDark={isDark}
-                />
-                <PaymentRow 
-                  name="Bob Johnson" 
-                  amount="₹1,499.00" 
-                  status="Failed" 
-                  avatarColor={isDark ? "bg-green-600" : "bg-green-500"}
-                  isDark={isDark}
-                />
-                <PaymentRow 
-                  name="Alice Williams" 
-                  amount="₹699.00" 
-                  status="Pending" 
-                  avatarColor={isDark ? "bg-purple-600" : "bg-purple-500"}
-                  isDark={isDark}
-                />
-                <PaymentRow 
-                  name="Michael Brown" 
-                  amount="₹1,299.00" 
-                  status="Paid" 
-                  avatarColor={isDark ? "bg-yellow-600" : "bg-yellow-500"}
-                  isDark={isDark}
-                />
+                {recentPayments.map((payment, index) => (
+                  <PaymentRow 
+                    key={payment.id}
+                    name={payment.name}
+                    amount={payment.amount}
+                    status={payment.status}
+                    avatarColor={isDark ? payment.avatarColor : lightModeAvatarColors[index] || lightModeAvatarColors[0]}
+                    isDark={isDark}
+                  />
+                ))}
               </tbody>
             </table>
           </div>

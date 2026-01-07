@@ -8,7 +8,7 @@ import SubscribersPage from '../pages/Admin/Customers';
 
 // Admin
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
-const DashboardPage = lazy(() => import('../pages/Admin/DashboardPage'));
+const DashboardPage = lazy(() => import('../pages/Admin/DashboardPage/DashboardPage'));
 const Customers = lazy(() => import('../pages/Admin/Customers'));
 const CustomerDetails = lazy(() => import('../pages/Admin/CustomerDetails'));
 const FieldStaffPage = lazy(() => import('../pages/Admin/FieldStaffPage'));
@@ -18,8 +18,9 @@ const Logs = lazy(() => import('../pages/Admin/Logs'));
 const Plans = lazy(() => import('../pages/Admin/Plans'));
 const Payments = lazy(() => import('../pages/Admin/Payments'));
 const OffersPage = lazy(() => import('../pages/Admin/OffersPage'));
-const Tickets = lazy(() => import('../pages/Admin/tickets'));
-const SettingsPage = lazy(() => import('../pages/Admin/SettingsPage'));
+const Tickets = lazy(() => import('../pages/Admin/Tickets'));
+const SettingsPage = lazy(() => import('../pages/Admin/Settings/SettingsPage'));
+
 const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
 const FranchisePage = lazy(() => import('../pages/Admin/Franchise'));
 
