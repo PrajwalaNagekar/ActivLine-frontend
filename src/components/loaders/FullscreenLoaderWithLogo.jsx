@@ -10,10 +10,10 @@ const FullScreenLoader = ({ show = true }) => {
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
       <div className="flex flex-col items-center gap-6">
-        
+
         {/* Logo animation */}
         <div className={`animate-pulse ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          <ActivlineLogo className="h-14 w-auto" />
+          <ActivlineLogo className="h-20 w-auto" />
         </div>
 
         {/* Loading text */}

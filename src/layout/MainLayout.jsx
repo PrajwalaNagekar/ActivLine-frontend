@@ -118,26 +118,6 @@ const MainLayout = () => {
 
   const theme = getTheme();
 
-  // Define sidebar items based on role
-  // const adminSidebarItems = [
-  //   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', key: 'Dashboard' },
-  //   { icon: Users, label: 'Subscribers', path: '/subscribers', key: 'Subscribers' },
-  //   { icon: MapPin, label: 'Field Staff', path: '/field-staff', key: 'Field Staff' },
-  //   { icon: CreditCard, label: 'Billing Engine', path: '/billing', key: 'Billing Engine' },
-  //   { icon: Megaphone, label: 'Offers & Ads', path: '/offers', key: 'Offers & Ads' },
-  //   { icon: MessageSquare, label: 'Support (WA)', path: '/support', key: 'Support (WA)' },
-  //   { icon: Settings, label: 'Settings', path: '/settings', key: 'Settings' },
-  // ];
-
-  // const franchiseSidebarItems = [
-  //   { icon: LayoutDashboard, label: 'Dashboard', path: '/franchise-dashboard', key: 'Dashboard' },
-  //   { icon: Users, label: 'My Subscribers', path: '/my-subscribers', key: 'Subscribers' },
-  //   { icon: MapPin, label: 'Local Staff', path: '/local-staff', key: 'Field Staff' },
-  //   { icon: Megaphone, label: 'Collections', path: '/collections', key: 'Offers & Ads' },
-  //   { icon: MessageSquare, label: 'Zone Support', path: '/zone-support', key: 'Support (WA)' },
-  //   { icon: Settings, label: 'Profile', path: '/profile', key: 'Settings' },
-  // ];
-
   const sidebarItemsMap = {
     admin: adminSidebarItems,
     franchise: franchiseSidebarItems,
@@ -169,13 +149,13 @@ const MainLayout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 ${sidebarCollapsed ? 'w-20' : 'w-72'
+        className={`fixed md:sticky md:top-0 md:h-screen inset-y-0 left-0 ${sidebarCollapsed ? 'w-20' : 'w-72'
           } flex flex-col flex-shrink-0 z-50 transform transition-all duration-300 ease-cubic-bezier(0.4, 0, 0.2, 1) ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           } ${theme.sidebarBg} ${theme.sidebarBorder}`}
       >
         <div className={`h-20 flex items-center justify-between px-6 border-b ${isDark ? 'border-slate-800' : 'border-purple-100/50'}`}>
           {!sidebarCollapsed && (
-            <ActivlineLogo className={`h-10 w-auto ${isDark ? 'text-white' : 'text-gray-900'}`} />
+            <ActivlineLogo className={`h-20 ml-2 w-auto ${isDark ? 'text-white' : 'text-gray-900'}`} />
           )}
           <div className="flex items-center gap-2 ml-auto">
             <button

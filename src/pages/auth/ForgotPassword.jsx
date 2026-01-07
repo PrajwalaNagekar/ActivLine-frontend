@@ -31,11 +31,10 @@ const ForgotPassword = () => {
 
   return (
     <div
-      className={`relative flex min-h-screen items-center justify-center overflow-hidden p-4 ${
-        isDark
-          ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
-          : "bg-gradient-to-br from-gray-50 via-white to-gray-100"
-      }`}
+      className={`relative flex min-h-screen items-center justify-center overflow-hidden p-4 ${isDark
+        ? "bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+        : "bg-gradient-to-br from-gray-50 via-white to-gray-100"
+        }`}
     >
       {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden">
@@ -49,40 +48,35 @@ const ForgotPassword = () => {
       {/* Card */}
       <div className="relative z-10 w-full max-w-md">
         <div
-          className={`relative rounded-2xl border p-8 shadow-2xl backdrop-blur-xl ${
-            isDark
-              ? "border-white/10 bg-slate-900/80"
-              : "border-gray-200/50 bg-white/95"
-          }`}
+          className={`relative rounded-2xl border p-8 shadow-2xl backdrop-blur-xl ${isDark
+            ? "border-white/10 bg-slate-900/80"
+            : "border-gray-200/50 bg-white/95"
+            }`}
         >
           <div
-            className={`absolute inset-0 rounded-2xl opacity-50 ${
-              isDark
-                ? "bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5"
-                : "bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50"
-            }`}
+            className={`absolute inset-0 rounded-2xl opacity-50 ${isDark
+              ? "bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5"
+              : "bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/50"
+              }`}
           ></div>
           <div className="relative z-10">
             {/* Header */}
             <div className="mb-8 text-center">
               <div className="mb-6 flex justify-center">
                 <ActivlineLogo
-                  className={`h-12 ${
-                    isDark ? "text-white" : "text-gray-900"
-                  }`}
+                  className={`h-20 ${isDark ? "text-white" : "text-gray-900"
+                    }`}
                 />
               </div>
               <h1
-                className={`text-2xl font-bold ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
+                className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"
+                  }`}
               >
                 Forgot Password
               </h1>
               <p
-                className={`mt-2 text-sm ${
-                  isDark ? "text-slate-400" : "text-gray-600"
-                }`}
+                className={`mt-2 text-sm ${isDark ? "text-slate-400" : "text-gray-600"
+                  }`}
               >
                 We’ll send a reset link to your email
               </p>
@@ -98,9 +92,8 @@ const ForgotPassword = () => {
                   <Form className="space-y-5">
                     <div>
                       <label
-                        className={`text-sm font-medium ${
-                          isDark ? "text-slate-300" : "text-gray-700"
-                        }`}
+                        className={`text-sm font-medium ${isDark ? "text-slate-300" : "text-gray-700"
+                          }`}
                       >
                         Email Address
                       </label>
@@ -108,11 +101,10 @@ const ForgotPassword = () => {
                         name="email"
                         type="email"
                         placeholder="you@example.com"
-                        className={`mt-1 w-full rounded-xl border p-3.5 text-sm outline-none transition-all ${
-                          isDark
-                            ? "border-slate-700/50 bg-slate-800/50 text-white placeholder:text-slate-500 focus:border-blue-500/50"
-                            : "border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-blue-500"
-                        }`}
+                        className={`mt-1 w-full rounded-xl border p-3.5 text-sm outline-none transition-all ${isDark
+                          ? "border-slate-700/50 bg-slate-800/50 text-white placeholder:text-slate-500 focus:border-blue-500/50"
+                          : "border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 focus:border-blue-500"
+                          }`}
                       />
                       <ErrorMessage
                         name="email"

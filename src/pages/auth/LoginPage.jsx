@@ -12,8 +12,6 @@ import ThemeToggle from "../../components/ThemeToggle";
 import { Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 
-
-
 const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -102,7 +100,7 @@ const LoginPage = () => {
         navigate("/franchise-dashboard");
       } else {
         console.log("inside else");
-        
+
         navigate("/staff/dashboard");
       }
     } catch (error) {
@@ -185,7 +183,7 @@ const LoginPage = () => {
             {/* HEADER */}
             <div className="mb-8 flex flex-col items-center animate-in slide-in-from-top-4 duration-700">
               <div className="mb-6 transform transition-transform hover:scale-105">
-                <ActivlineLogo className={`h-12 w-auto drop-shadow-lg ${isDark ? 'text-white' : 'text-gray-900'}`} />
+                <ActivlineLogo className={`h-25 w-auto drop-shadow-lg ${isDark ? 'text-white' : 'text-gray-900'}`} />
               </div>
               <h1 className={`text-3xl font-bold tracking-tight drop-shadow-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
                 Sign In to Activline
