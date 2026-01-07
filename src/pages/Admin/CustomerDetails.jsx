@@ -10,7 +10,7 @@ const CustomerDetails = () => {
   // Renamed variable from subscriber to customer as requested
   const customer = location.state?.customer || location.state?.subscriber; // Fallback for backward compatibility
 
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState('');       
 
   // Mock Data for UI demonstration
   const paymentHistory = [
