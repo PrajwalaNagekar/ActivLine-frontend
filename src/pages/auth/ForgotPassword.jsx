@@ -103,10 +103,7 @@ const ForgotPassword = () => {
                   <div className={`p-3 rounded-xl shadow-lg border transition-all duration-300 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                     <ActivlineLogo className={`h-12 transition-colors duration-300 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
                   </div>
-                  <div className="text-left">
-                    <h2 className={`text-3xl font-bold transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>Activline</h2>
-                    <p className={`text-base font-medium transition-colors duration-300 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Network Solutions</p>
-                  </div>
+                 
                 </div>
                 
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent mb-3">

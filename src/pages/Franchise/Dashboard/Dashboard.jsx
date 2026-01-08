@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import FullScreenLoader from '../../components/loaders/FullscreenLoaderWithLogo';
-import { FRANCHISE_KPI_DATA } from '../../data';
-import KPICard from '../../components/KPICard';
+import FullScreenLoader from '../../../components/loaders/FullscreenLoaderWithLogo';
+import { FRANCHISE_KPI_DATA } from '../../../data';
+import KPICard from '../../../components/KPICard';
 import { MapPin } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext';
 
 const Dashboard = () => {
     const { isDark } = useTheme();

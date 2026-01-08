@@ -144,155 +144,382 @@
 // `;
 
 
-import React from "react";
-import styled from "styled-components";
+// import React from "react";
+// import styled from "styled-components";
 
-const Loader = ({
-  size = 64,
-  text = "Loading",
-  color = "#4f29f0",
-}) => {
+// const Loader = ({
+//   size = 64,
+//   text = "Loading",
+//   color = "#4f29f0",
+// }) => {
+//   return (
+//     <StyledWrapper $size={size} $color={color}>
+//       <div className="wifi-loader">
+//         <svg className="circle-outer" viewBox="0 0 86 86">
+//           <circle className="back" cx="43" cy="43" r="40" />
+//           <circle className="front" cx="43" cy="43" r="40" />
+//         </svg>
+
+//         <svg className="circle-middle" viewBox="0 0 60 60">
+//           <circle className="back" cx="30" cy="30" r="27" />
+//           <circle className="front" cx="30" cy="30" r="27" />
+//         </svg>
+
+//         <svg className="circle-inner" viewBox="0 0 34 34">
+//           <circle className="back" cx="17" cy="17" r="14" />
+//           <circle className="front" cx="17" cy="17" r="14" />
+//         </svg>
+
+//         <div className="text" data-text={text} />
+//       </div>
+//     </StyledWrapper>
+//   );
+// };
+
+// const StyledWrapper = styled.div`
+//   .wifi-loader {
+//     --front-color: ${({ $color }) => $color};
+//     --back-color: #c3c8de;
+//     --text-color: #414856;
+
+//     width: ${({ $size }) => $size}px;
+//     height: ${({ $size }) => $size}px;
+//     position: relative;
+//     display: flex;
+//     justify-content: center;
+//     align-items: center;
+//   }
+
+//   svg {
+//     position: absolute;
+//   }
+
+//   circle {
+//     fill: none;
+//     stroke-width: 6px;
+//     stroke-linecap: round;
+//     transform: rotate(-100deg);
+//     transform-origin: center;
+//   }
+
+//   .back {
+//     stroke: var(--back-color);
+//   }
+
+//   .front {
+//     stroke: var(--front-color);
+//   }
+
+//   .circle-outer {
+//     width: 86px;
+//     height: 86px;
+//   }
+
+//   .circle-middle {
+//     width: 60px;
+//     height: 60px;
+//   }
+
+//   .circle-inner {
+//     width: 34px;
+//     height: 34px;
+//   }
+
+//   .circle-outer .back {
+//     animation: outer 1.8s ease infinite 0.3s;
+//   }
+
+//   .circle-outer .front {
+//     animation: outer 1.8s ease infinite 0.15s;
+//   }
+
+//   .circle-middle .back {
+//     animation: middle 1.8s ease infinite 0.25s;
+//   }
+
+//   .circle-middle .front {
+//     animation: middle 1.8s ease infinite 0.1s;
+//   }
+
+//   .circle-inner .back {
+//     animation: inner 1.8s ease infinite 0.2s;
+//   }
+
+//   .circle-inner .front {
+//     animation: inner 1.8s ease infinite 0.05s;
+//   }
+
+//   .text {
+//     position: absolute;
+//     bottom: -36px;
+//     font-size: 14px;
+//     font-weight: 500;
+//     text-transform: lowercase;
+//   }
+
+//   .text::before {
+//     content: attr(data-text);
+//     color: var(--text-color);
+//   }
+
+//   .text::after {
+//     content: attr(data-text);
+//     color: var(--front-color);
+//     position: absolute;
+//     left: 0;
+//     animation: text 3.6s ease infinite;
+//   }
+
+//   @keyframes outer {
+//     0% { stroke-dashoffset: 25; }
+//     65% { stroke-dashoffset: 301; }
+//     100% { stroke-dashoffset: 276; }
+//   }
+
+//   @keyframes middle {
+//     0% { stroke-dashoffset: 17; }
+//     65% { stroke-dashoffset: 204; }
+//     100% { stroke-dashoffset: 187; }
+//   }
+
+//   @keyframes inner {
+//     0% { stroke-dashoffset: 9; }
+//     65% { stroke-dashoffset: 106; }
+//     100% { stroke-dashoffset: 97; }
+//   }
+
+//   @keyframes text {
+//     0% { clip-path: inset(0 100% 0 0); }
+//     50% { clip-path: inset(0); }
+//     100% { clip-path: inset(0 0 0 100%); }
+//   }
+// `;
+
+// export default Loader;
+
+
+import React from 'react';
+import styled from 'styled-components';
+
+const Loader = () => {
   return (
-    <StyledWrapper $size={size} $color={color}>
-      <div className="wifi-loader">
+    <StyledWrapper>
+      <div id="wifi-loader">
         <svg className="circle-outer" viewBox="0 0 86 86">
-          <circle className="back" cx="43" cy="43" r="40" />
-          <circle className="front" cx="43" cy="43" r="40" />
+          <circle className="back" cx={43} cy={43} r={40} />
+          <circle className="front" cx={43} cy={43} r={40} />
+          <circle className="new" cx={43} cy={43} r={40} />
         </svg>
-
         <svg className="circle-middle" viewBox="0 0 60 60">
-          <circle className="back" cx="30" cy="30" r="27" />
-          <circle className="front" cx="30" cy="30" r="27" />
+          <circle className="back" cx={30} cy={30} r={27} />
+          <circle className="front" cx={30} cy={30} r={27} />
         </svg>
-
         <svg className="circle-inner" viewBox="0 0 34 34">
-          <circle className="back" cx="17" cy="17" r="14" />
-          <circle className="front" cx="17" cy="17" r="14" />
+          <circle className="back" cx={17} cy={17} r={14} />
+          <circle className="front" cx={17} cy={17} r={14} />
         </svg>
-
-        <div className="text" data-text={text} />
+        <div className="text" data-text="Searching" />
       </div>
     </StyledWrapper>
   );
-};
+}
 
 const StyledWrapper = styled.div`
-  .wifi-loader {
-    --front-color: ${({ $color }) => $color};
+  #wifi-loader {
+    --background: #62abff;
+    --front-color: #4f29f0;
     --back-color: #c3c8de;
     --text-color: #414856;
-
-    width: ${({ $size }) => $size}px;
-    height: ${({ $size }) => $size}px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50px;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
   }
 
-  svg {
+  #wifi-loader svg {
     position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  circle {
+  #wifi-loader svg circle {
+    position: absolute;
     fill: none;
     stroke-width: 6px;
     stroke-linecap: round;
+    stroke-linejoin: round;
     transform: rotate(-100deg);
     transform-origin: center;
   }
 
-  .back {
+  #wifi-loader svg circle.back {
     stroke: var(--back-color);
   }
 
-  .front {
+  #wifi-loader svg circle.front {
     stroke: var(--front-color);
   }
 
-  .circle-outer {
-    width: 86px;
+  #wifi-loader svg.circle-outer {
     height: 86px;
+    width: 86px;
   }
 
-  .circle-middle {
-    width: 60px;
+  #wifi-loader svg.circle-outer circle {
+    stroke-dasharray: 62.75 188.25;
+  }
+
+  #wifi-loader svg.circle-outer circle.back {
+    animation: circle-outer135 1.8s ease infinite 0.3s;
+  }
+
+  #wifi-loader svg.circle-outer circle.front {
+    animation: circle-outer135 1.8s ease infinite 0.15s;
+  }
+
+  #wifi-loader svg.circle-middle {
     height: 60px;
+    width: 60px;
   }
 
-  .circle-inner {
-    width: 34px;
+  #wifi-loader svg.circle-middle circle {
+    stroke-dasharray: 42.5 127.5;
+  }
+
+  #wifi-loader svg.circle-middle circle.back {
+    animation: circle-middle6123 1.8s ease infinite 0.25s;
+  }
+
+  #wifi-loader svg.circle-middle circle.front {
+    animation: circle-middle6123 1.8s ease infinite 0.1s;
+  }
+
+  #wifi-loader svg.circle-inner {
     height: 34px;
+    width: 34px;
   }
 
-  .circle-outer .back {
-    animation: outer 1.8s ease infinite 0.3s;
+  #wifi-loader svg.circle-inner circle {
+    stroke-dasharray: 22 66;
   }
 
-  .circle-outer .front {
-    animation: outer 1.8s ease infinite 0.15s;
+  #wifi-loader svg.circle-inner circle.back {
+    animation: circle-inner162 1.8s ease infinite 0.2s;
   }
 
-  .circle-middle .back {
-    animation: middle 1.8s ease infinite 0.25s;
+  #wifi-loader svg.circle-inner circle.front {
+    animation: circle-inner162 1.8s ease infinite 0.05s;
   }
 
-  .circle-middle .front {
-    animation: middle 1.8s ease infinite 0.1s;
-  }
-
-  .circle-inner .back {
-    animation: inner 1.8s ease infinite 0.2s;
-  }
-
-  .circle-inner .front {
-    animation: inner 1.8s ease infinite 0.05s;
-  }
-
-  .text {
+  #wifi-loader .text {
     position: absolute;
-    bottom: -36px;
-    font-size: 14px;
-    font-weight: 500;
+    bottom: -40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-transform: lowercase;
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.2px;
   }
 
-  .text::before {
+  #wifi-loader .text::before, #wifi-loader .text::after {
     content: attr(data-text);
+  }
+
+  #wifi-loader .text::before {
     color: var(--text-color);
   }
 
-  .text::after {
-    content: attr(data-text);
+  #wifi-loader .text::after {
     color: var(--front-color);
+    animation: text-animation76 3.6s ease infinite;
     position: absolute;
     left: 0;
-    animation: text 3.6s ease infinite;
   }
 
-  @keyframes outer {
-    0% { stroke-dashoffset: 25; }
-    65% { stroke-dashoffset: 301; }
-    100% { stroke-dashoffset: 276; }
+  @keyframes circle-outer135 {
+    0% {
+      stroke-dashoffset: 25;
+    }
+
+    25% {
+      stroke-dashoffset: 0;
+    }
+
+    65% {
+      stroke-dashoffset: 301;
+    }
+
+    80% {
+      stroke-dashoffset: 276;
+    }
+
+    100% {
+      stroke-dashoffset: 276;
+    }
   }
 
-  @keyframes middle {
-    0% { stroke-dashoffset: 17; }
-    65% { stroke-dashoffset: 204; }
-    100% { stroke-dashoffset: 187; }
+  @keyframes circle-middle6123 {
+    0% {
+      stroke-dashoffset: 17;
+    }
+
+    25% {
+      stroke-dashoffset: 0;
+    }
+
+    65% {
+      stroke-dashoffset: 204;
+    }
+
+    80% {
+      stroke-dashoffset: 187;
+    }
+
+    100% {
+      stroke-dashoffset: 187;
+    }
   }
 
-  @keyframes inner {
-    0% { stroke-dashoffset: 9; }
-    65% { stroke-dashoffset: 106; }
-    100% { stroke-dashoffset: 97; }
+  @keyframes circle-inner162 {
+    0% {
+      stroke-dashoffset: 9;
+    }
+
+    25% {
+      stroke-dashoffset: 0;
+    }
+
+    65% {
+      stroke-dashoffset: 106;
+    }
+
+    80% {
+      stroke-dashoffset: 97;
+    }
+
+    100% {
+      stroke-dashoffset: 97;
+    }
   }
 
-  @keyframes text {
-    0% { clip-path: inset(0 100% 0 0); }
-    50% { clip-path: inset(0); }
-    100% { clip-path: inset(0 0 0 100%); }
-  }
-`;
+  @keyframes text-animation76 {
+    0% {
+      clip-path: inset(0 100% 0 0);
+    }
+
+    50% {
+      clip-path: inset(0);
+    }
+
+    100% {
+      clip-path: inset(0 0 0 100%);
+    }
+  }`;
 
 export default Loader;

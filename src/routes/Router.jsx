@@ -20,12 +20,15 @@ const Payments = lazy(() => import('../pages/Admin/Payments'));
 const OffersPage = lazy(() => import('../pages/Admin/OffersPage'));
 const Tickets = lazy(() => import('../pages/Admin/Tickets'));
 const SettingsPage = lazy(() => import('../pages/Admin/Settings/SettingsPage'));
+const AdminNotifications = lazy(() => import('../pages/Admin/Notification/AdminNotification'));
+const FranchiseNotifications = lazy(() => import('../pages/Franchise/Notification/FranchiseNotification'));
+const StaffNotifications = lazy(() => import('../pages/Staff/Notification/StaffNotification'));
 
 const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
 const FranchisePage = lazy(() => import('../pages/Admin/Franchise'));
 
 //franchise
-const FranchiseDashboard = lazy(() => import('../pages/Franchise/Dashboard'));
+const FranchiseDashboard = lazy(() => import('../pages/Franchise/Dashboard/Dashboard'));
 // const Mysubscribers = lazy(() => import('../pages/Franchise/Customers'));
 const LocalStaff = lazy(() => import('../pages/Franchise/LocalStaff'));
 const Collections = lazy(() => import('../pages/Franchise/Collections'));
@@ -93,6 +96,40 @@ const Router = () => {
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
+
+{/* 🔔 NOTIFICATIONS */}
+<Route
+  path="admin-notifications"
+  element={
+    <ProtectedRoute allowedRoles={['admin']}>
+      <Suspense fallback={<LoadingFallback />}>
+        <AdminNotifications />
+      </Suspense>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="franchise-notifications"
+  element={
+    <ProtectedRoute allowedRoles={['franchise']}>
+      <Suspense fallback={<LoadingFallback />}>
+        <FranchiseNotifications />
+      </Suspense>
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="staff-notifications"
+  element={
+    <ProtectedRoute allowedRoles={['staff']}>
+      <Suspense fallback={<LoadingFallback />}>
+        <StaffNotifications />
+      </Suspense>
+    </ProtectedRoute>
+  }
+/>
 
           <Route
             path="dashboard"
@@ -332,4 +369,3 @@ const Router = () => {
 };
 
 export default Router;
-

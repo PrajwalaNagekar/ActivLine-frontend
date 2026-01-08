@@ -293,10 +293,18 @@ const MainLayout = () => {
 
           <div className="flex items-center gap-2 md:gap-4">
             <ThemeToggle />
-            <button className={`relative p-2 rounded-lg transition-colors ${isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'}`}>
-              <Bell className="w-5 h-5" />
-              <span className={`absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 ${isDark ? 'border-slate-900' : 'border-white'}`}></span>
-            </button>
+           <button
+  onClick={() => {
+    if (user?.role === 'admin') navigate('/admin-notifications');
+    else if (user?.role === 'franchise') navigate('/franchise-notifications');
+    else if (user?.role === 'staff') navigate('/staff-notifications');
+  }}
+  className={`relative p-2 rounded-lg transition-colors`}
+>
+  <Bell className="w-5 h-5" />
+  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+</button>
+
           </div>
         </header>
 
