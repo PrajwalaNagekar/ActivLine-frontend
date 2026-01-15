@@ -5,6 +5,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../layout/MainLayout";
 // import SubscriberDetailPage from "../pages/Admin/CustomerDetails";
 // import SubscribersPage from "../pages/Admin/Customers";
+const ProfilePage = lazy(() => import("../pages/profile/ProfilePage.jsx"));
 
 // Admin
 const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
@@ -66,6 +67,14 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+const ProfileSwitcher = ({ franchiseUser, onUpdate }) => {
+  const { user } = useAuth();
+  if (user?.role === 'franchise') {
+    return <Profile franchiseUser={franchiseUser} onUpdate={onUpdate} />;
+  }
+  return <ProfilePage />;
+};
+
 const Router = () => {
   const [franchiseUser, setFranchiseUser] = useState({
     name: "Sathya Networks",
@@ -84,6 +93,7 @@ const Router = () => {
             </PublicRoute>
           }
         />
+
         <Route
           path="/forgot-password"
           element={
@@ -359,13 +369,11 @@ const Router = () => {
           <Route
             path="profile"
             element={
-              <ProtectedRoute allowedRoles={["franchise"]}>
-                
-                  <Profile
-                    franchiseUser={franchiseUser}
-                    onUpdate={setFranchiseUser}
-                  />
-                
+              <ProtectedRoute allowedRoles={["admin", "franchise", "staff"]}>
+                <ProfileSwitcher
+                  franchiseUser={franchiseUser}
+                  onUpdate={setFranchiseUser}
+                />
               </ProtectedRoute>
             }
           />

@@ -3,6 +3,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
+  User,
   MapPin,
   CreditCard,
   Megaphone,
@@ -85,6 +86,7 @@ const MainLayout = () => {
 
   const activeTab = getActiveTab();
   const isAdminUser = isAdmin();
+const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   const getTheme = () => {
     if (!isDark) {
@@ -243,28 +245,63 @@ const MainLayout = () => {
             </div>
           )}
 
-          <button
-            onClick={handleSignOut}
-            className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between'} gap-3 ${sidebarCollapsed ? 'p-2' : 'p-3'} rounded-lg transition-colors ${isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-gray-100 text-gray-700'}`}
-            title={sidebarCollapsed ? "Sign Out" : undefined}
-          >
-            {!sidebarCollapsed ? (
-              <>
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className={`w-8 h-8 rounded-full border flex items-center justify-center font-bold flex-shrink-0 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-gray-200 border-gray-300 text-gray-900'}`}>
-                    {userDisplayName.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="overflow-hidden min-w-0 flex-1">
-                    <p className={`text-sm font-bold truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{userDisplayName}</p>
-                    <p className={`text-xs truncate ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>{userRole}</p>
-                  </div>
-                </div>
-                <LogOut className={`w-4 h-4 flex-shrink-0 ${isDark ? 'text-slate-400' : 'text-gray-600'}`} />
-              </>
-            ) : (
-              <LogOut className={`w-5 h-5 ${isDark ? 'text-slate-300' : 'text-gray-700'}`} />
-            )}
-          </button>
+<div className="relative">
+  {/* USER BUTTON */}
+  <button
+    onClick={() => setIsUserMenuOpen((prev) => !prev)}
+    className={`w-full flex items-center ${
+      sidebarCollapsed ? 'justify-center' : 'justify-between'
+    } gap-3 ${sidebarCollapsed ? 'p-2' : 'p-3'} rounded-lg transition-colors
+    ${isDark 
+      ? `hover:bg-slate-800 text-slate-300 ${isUserMenuOpen ? 'bg-slate-800 text-white' : ''}` 
+      : `hover:bg-gray-100 text-gray-700 ${isUserMenuOpen ? 'bg-gray-100 text-gray-900' : ''}`
+    }`}
+  >
+    <div className="flex items-center gap-3 min-w-0">
+      <div className={`w-8 h-8 rounded-full border flex items-center justify-center font-bold
+        ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-200 border-gray-300'}`}>
+        {userDisplayName.charAt(0).toUpperCase()}
+      </div>
+
+      {!sidebarCollapsed && (
+        <div className="text-left">
+          <p className="text-sm font-bold truncate">{userDisplayName}</p>
+          <p className="text-xs truncate">{userRole}</p>
+        </div>
+      )}
+    </div>
+  </button>
+
+  {/* DROPDOWN */}
+  {isUserMenuOpen && !sidebarCollapsed && (
+    <div
+      className={`absolute bottom-full left-0 w-full mb-2 rounded-xl shadow-xl border z-50 overflow-hidden
+      ${isDark ? 'bg-slate-900 border-slate-700 shadow-black/50' : 'bg-white border-gray-200 shadow-gray-200'}`}
+    >
+      <button
+        onClick={() => {
+          navigate('/profile');
+          setIsUserMenuOpen(false);
+        }}
+        className={`w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors
+        ${isDark ? 'text-slate-300 hover:bg-slate-800 hover:text-white' : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'}`}
+      >
+        <User className="w-4 h-4" />
+        Profile
+      </button>
+
+      <button
+        onClick={handleSignOut}
+        className={`w-full px-4 py-3 text-left text-sm flex items-center gap-3 transition-colors
+        ${isDark ? 'text-red-400 hover:bg-red-500/10' : 'text-red-600 hover:bg-red-50'}`}
+      >
+        <LogOut className="w-4 h-4" />
+        Logout
+      </button>
+    </div>
+  )}
+</div>
+
         </div>
       </aside>
 
