@@ -1,44 +1,52 @@
-import React, { lazy, Suspense, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import ProtectedRoute from './ProtectedRoute';
-import MainLayout from '../layout/MainLayout';
-import SubscriberDetailPage from '../pages/Admin/CustomerDetails';
-import SubscribersPage from '../pages/Admin/Customers';
+import React, { lazy, Suspense, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import ProtectedRoute from "./ProtectedRoute";
+import MainLayout from "../layout/MainLayout";
+// import SubscriberDetailPage from "../pages/Admin/CustomerDetails";
+// import SubscribersPage from "../pages/Admin/Customers";
 
 // Admin
-const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
-const DashboardPage = lazy(() => import('../pages/Admin/DashboardPage/DashboardPage'));
-const Customers = lazy(() => import('../pages/Admin/Customers'));
-const CustomerDetails = lazy(() => import('../pages/Admin/CustomerDetails'));
-const FieldStaffPage = lazy(() => import('../pages/Admin/FieldStaffPage'));
-const Staff = lazy(() => import('../pages/Admin/Staff'));
-const Reports = lazy(() => import('../pages/Admin/Reports'));
-const Logs = lazy(() => import('../pages/Admin/Logs'));
-const Plans = lazy(() => import('../pages/Admin/Plans'));
-const Payments = lazy(() => import('../pages/Admin/Payments'));
-const OffersPage = lazy(() => import('../pages/Admin/OffersPage'));
-const Tickets = lazy(() => import('../pages/Admin/Tickets'));
-const SettingsPage = lazy(() => import('../pages/Admin/Settings/SettingsPage'));
-const AdminNotifications = lazy(() => import('../pages/Admin/Notification/AdminNotification'));
-const FranchiseNotifications = lazy(() => import('../pages/Franchise/Notification/FranchiseNotification'));
-const StaffNotifications = lazy(() => import('../pages/Staff/Notification/StaffNotification'));
+const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
+const DashboardPage = lazy(() =>
+  import("../pages/Admin/DashboardPage/DashboardPage")
+);
+const Customers = lazy(() => import("../pages/Admin/Customers"));
+const CustomerDetails = lazy(() => import("../pages/Admin/CustomerDetails"));
+const FieldStaffPage = lazy(() => import("../pages/Admin/FieldStaffPage"));
+const Staff = lazy(() => import("../pages/Admin/Staff"));
+const Reports = lazy(() => import("../pages/Admin/Reports"));
+const Logs = lazy(() => import("../pages/Admin/Logs"));
+const Plans = lazy(() => import("../pages/Admin/Plans"));
+const Payments = lazy(() => import("../pages/Admin/Payments"));
+const OffersPage = lazy(() => import("../pages/Admin/OffersPage"));
+const Tickets = lazy(() => import("../pages/Admin/Tickets"));
+const SettingsPage = lazy(() => import("../pages/Admin/Settings/SettingsPage"));
+const AdminNotifications = lazy(() =>
+  import("../pages/Admin/Notification/AdminNotification")
+);
+const FranchiseNotifications = lazy(() =>
+  import("../pages/Franchise/Notification/FranchiseNotification")
+);
+const StaffNotifications = lazy(() =>
+  import("../pages/Staff/Notification/StaffNotification")
+);
 
-const ForgotPassword = lazy(() => import('../pages/auth/ForgotPassword'));
-const FranchisePage = lazy(() => import('../pages/Admin/Franchise'));
+const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword"));
+const FranchisePage = lazy(() => import("../pages/Admin/Franchise"));
 
 //franchise
-const FranchiseDashboard = lazy(() => import('../pages/Franchise/Dashboard/Dashboard'));
+const FranchiseDashboard = lazy(() =>
+  import("../pages/Franchise/Dashboard/Dashboard")
+);
 // const Mysubscribers = lazy(() => import('../pages/Franchise/Customers'));
-const LocalStaff = lazy(() => import('../pages/Franchise/LocalStaff'));
-const Collections = lazy(() => import('../pages/Franchise/Collections'));
+const LocalStaff = lazy(() => import("../pages/Franchise/LocalStaff"));
+const Collections = lazy(() => import("../pages/Franchise/Collections"));
 // const ZoneSupport = lazy(() => import('../pages/Franchise/ZoneSupport'));
-const Profile = lazy(() => import('../pages/Franchise/Profile'));
-
+const Profile = lazy(() => import("../pages/Franchise/Profile"));
 
 //staff
-const AssignedTickets=lazy(()=>import('../pages/Staff/AssignedTickets'))
-
+const AssignedTickets = lazy(() => import("../pages/Staff/AssignedTickets"));
 
 // Loading component
 const LoadingFallback = () => (
@@ -51,25 +59,22 @@ const LoadingFallback = () => (
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading) {
-    return <LoadingFallback />;
-  }
-
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  return <Suspense fallback={<LoadingFallback />}>{children}</Suspense>;
+  return children;
 };
 
 const Router = () => {
   const [franchiseUser, setFranchiseUser] = useState({
     name: "Sathya Networks",
     role: "Franchise Admin",
-    zone: "Indiranagar - Sector 4"
+    zone: "Indiranagar - Sector 4",
   });
   return (
     <BrowserRouter>
+   
       <Routes>
         <Route
           path="/login"
@@ -97,47 +102,47 @@ const Router = () => {
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
 
-{/* 🔔 NOTIFICATIONS */}
-<Route
-  path="admin-notifications"
-  element={
-    <ProtectedRoute allowedRoles={['admin']}>
-      <Suspense fallback={<LoadingFallback />}>
-        <AdminNotifications />
-      </Suspense>
-    </ProtectedRoute>
-  }
-/>
+          {/* 🔔 NOTIFICATIONS */}
+          <Route
+            path="admin-notifications"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                
+                  <AdminNotifications />
+                
+              </ProtectedRoute>
+            }
+          />
 
-<Route
-  path="franchise-notifications"
-  element={
-    <ProtectedRoute allowedRoles={['franchise']}>
-      <Suspense fallback={<LoadingFallback />}>
-        <FranchiseNotifications />
-      </Suspense>
-    </ProtectedRoute>
-  }
-/>
+          <Route
+            path="franchise-notifications"
+            element={
+              <ProtectedRoute allowedRoles={["franchise"]}>
+                
+                  <FranchiseNotifications />
+                
+              </ProtectedRoute>
+            }
+          />
 
-<Route
-  path="staff-notifications"
-  element={
-    <ProtectedRoute allowedRoles={['staff']}>
-      <Suspense fallback={<LoadingFallback />}>
-        <StaffNotifications />
-      </Suspense>
-    </ProtectedRoute>
-  }
-/>
+          <Route
+            path="staff-notifications"
+            element={
+              <ProtectedRoute allowedRoles={["staff"]}>
+                
+                  <StaffNotifications />
+                
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="dashboard"
             element={
-              <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+                
                   <DashboardPage />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
@@ -145,19 +150,19 @@ const Router = () => {
             path="franchise"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <Suspense fallback={<LoadingFallback />}>
+                <Suspense >
                   <FranchisePage />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           /> */}
           <Route
             path="franchise-dashboard"
             element={
-              <ProtectedRoute allowedRoles={['franchise']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["franchise"]}>
+                
                   <FranchiseDashboard />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
@@ -165,20 +170,20 @@ const Router = () => {
           <Route
             path="my-customers"
             element={
-              <ProtectedRoute allowedRoles={['franchise']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["franchise"]}>
+                
                   <Customers />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
           <Route
             path="my-customers-details/:id"
             element={
-              <ProtectedRoute allowedRoles={['franchise']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["franchise"]}>
+                
                   <CustomerDetails />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
@@ -186,37 +191,37 @@ const Router = () => {
           <Route
             path="customers"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              
                 <Customers />
-              </Suspense>
+              
             }
           />
           <Route
             path="customer-details/:id"
             element={
-              <Suspense fallback={<LoadingFallback />}>
+              
                 <CustomerDetails />
-              </Suspense>
+              
             }
           />
 
           <Route
             path="field-staff"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin"]}>
+                
                   <FieldStaffPage />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
           <Route
             path="local-staff"
             element={
-              <ProtectedRoute allowedRoles={['franchise']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["franchise"]}>
+                
                   <LocalStaff />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
@@ -224,10 +229,10 @@ const Router = () => {
           <Route
             path="collections"
             element={
-              <ProtectedRoute allowedRoles={['franchise']}>
-                <Suspense fallback={<LoadingFallback />}>
-                  <Collections cashInHand={12450} setCashInHand={() => { }} />
-                </Suspense>
+              <ProtectedRoute allowedRoles={["franchise"]}>
+                
+                  <Collections cashInHand={12450} setCashInHand={() => {}} />
+                
               </ProtectedRoute>
             }
           />
@@ -236,9 +241,9 @@ const Router = () => {
             path="local-staff"
             element={
               <ProtectedRoute allowedRoles={['franchise']}>
-                <Suspense fallback={<LoadingFallback />}>
+                <Suspense >
                   <LocalStaff />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           /> */}
@@ -247,50 +252,50 @@ const Router = () => {
           <Route
             path="payments"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin"]}>
+                
                   <Payments />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
           <Route
             path="staff"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin"]}>
+                
                   <Staff />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
           <Route
             path="reports"
             element={
-              <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+                
                   <Reports />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
           <Route
             path="logs"
             element={
-              <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+                
                   <Logs />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
           <Route
             path="plans"
             element={
-              <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+                
                   <Plans />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
@@ -299,10 +304,10 @@ const Router = () => {
           <Route
             path="offers"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin"]}>
+                
                   <OffersPage />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
@@ -311,10 +316,10 @@ const Router = () => {
           <Route
             path="tickets"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin"]}>
+                
                   <Tickets />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
@@ -322,20 +327,20 @@ const Router = () => {
           <Route
             path="Zone-tickets"
             element={
-              <ProtectedRoute allowedRoles={['franchise']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["franchise"]}>
+                
                   <Tickets />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
           <Route
             path="assigned-tickets"
             element={
-              <ProtectedRoute allowedRoles={['staff']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["staff"]}>
+                
                   <AssignedTickets />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
@@ -343,10 +348,10 @@ const Router = () => {
           <Route
             path="settings"
             element={
-              <ProtectedRoute allowedRoles={['admin', 'staff']}>
-                <Suspense fallback={<LoadingFallback />}>
+              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+                
                   <SettingsPage />
-                </Suspense>
+                
               </ProtectedRoute>
             }
           />
@@ -354,16 +359,20 @@ const Router = () => {
           <Route
             path="profile"
             element={
-              <ProtectedRoute allowedRoles={['franchise']}>
-                <Suspense fallback={<LoadingFallback />}>
-                  <Profile franchiseUser={franchiseUser} onUpdate={setFranchiseUser} />
-                </Suspense>
+              <ProtectedRoute allowedRoles={["franchise"]}>
+                
+                  <Profile
+                    franchiseUser={franchiseUser}
+                    onUpdate={setFranchiseUser}
+                  />
+                
               </ProtectedRoute>
             }
           />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+     
     </BrowserRouter>
   );
 };

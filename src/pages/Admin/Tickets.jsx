@@ -88,6 +88,7 @@ const SupportPage = () => {
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [ticketForm, setTicketForm] = useState({ type: 'Technical Issue', priority: 'High', description: '' });
   const [showSidebar, setShowSidebar] = useState(false);
+  const [isPageLoaded, setIsPageLoaded] = useState(false);
   const messagesEndRef = useRef(null);
 
   const activeTicket = tickets.find(c => c.id === activeTicketId);
@@ -99,6 +100,11 @@ const SupportPage = () => {
   useEffect(() => {
     scrollToBottom();
   }, [activeTicket?.messages]);
+
+  // Page load animation trigger
+  useEffect(() => {
+    setIsPageLoaded(true);
+  }, []);
 
   const handleTicketSelect = (id) => {
     setActiveTicketId(id);
@@ -198,18 +204,38 @@ const SupportPage = () => {
   const purpleHover = isDark ? 'hover:bg-slate-800' : 'hover:bg-purple-50';
 
   return (
-    <div className={`rounded-xl shadow-sm border flex flex-col md:flex-row h-[calc(100vh-140px)] overflow-hidden ${containerClasses}`}>
+    <div 
+      className={`
+        rounded-xl shadow-sm border flex flex-col md:flex-row h-[calc(100vh-140px)] overflow-hidden
+        ${containerClasses}
+        transition-all duration-700 ease-out
+        ${isPageLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+      `}
+    >
       {/* Mobile Overlay */}
       {showSidebar && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setShowSidebar(false)} />
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in duration-200" 
+          onClick={() => setShowSidebar(false)} 
+        />
       )}
 
       {/* SIDEBAR */}
-      <div className={`absolute md:static inset-y-0 left-0 w-80 border-r flex flex-col z-50 transform transition-all duration-300 ease-in-out ${showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        } ${isDark ? 'border-slate-800 bg-slate-900' : 'border-gray-200 bg-white'}`}>
+      <div className={`
+        absolute md:static inset-y-0 left-0 w-80 border-r flex flex-col z-50
+        transform transition-all duration-300 ease-in-out
+        ${showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        ${isDark ? 'border-slate-800 bg-slate-900' : 'border-gray-200 bg-white'}
+        ${isPageLoaded ? 'opacity-100' : 'opacity-0'}
+        transition-opacity duration-500 delay-100
+      `}>
 
         {/* Sidebar Header */}
-        <div className={`p-4 border-b space-y-3 ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
+        <div className={`
+          p-4 border-b space-y-3
+          ${isDark ? 'border-slate-800' : 'border-gray-200'}
+          animate-in slide-in-from-top duration-300
+        `}>
           <div className="flex items-center justify-between">
             <div className='flex flex-col'>
               <h2 className={`font-bold text-lg ${textPrimary}`}>Support Inbox</h2>
@@ -218,15 +244,19 @@ const SupportPage = () => {
             <button onClick={() => setShowSidebar(false)} className="md:hidden"><XCircle className={`w-5 h-5 ${textSecondary}`} /></button>
           </div>
           {/* Status Filter Tabs */}
-          <div className="flex gap-1 bg-gray-100/50 p-1 rounded-lg overflow-x-auto scrollbar-hide">
+          <div className="flex gap-1 bg-gray-100/50 p-1 rounded-lg overflow-x-auto scrollbar-hide animate-in slide-in-from-left duration-300 delay-75">
             {['All', 'Open', 'In Progress', 'Resolved'].map(status => (
               <button
                 key={status}
                 onClick={() => setFilterStatus(status)}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all ${filterStatus === status
-                  ? (isDark ? 'bg-slate-700 text-white shadow' : 'bg-white text-purple-700 shadow')
-                  : (isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-900')
-                  }`}
+                className={`
+                  px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-all
+                  ${filterStatus === status
+                    ? (isDark ? 'bg-slate-700 text-white shadow' : 'bg-white text-purple-700 shadow')
+                    : (isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-900')
+                  }
+                  transition-transform duration-200 hover:scale-105 active:scale-95
+                `}
               >
                 {status}
               </button>
@@ -235,23 +265,43 @@ const SupportPage = () => {
         </div>
 
         {/* Search */}
-        <div className={`p-3 border-b ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
+        <div className={`
+          p-3 border-b
+          ${isDark ? 'border-slate-800' : 'border-gray-200'}
+          animate-in slide-in-from-left duration-300 delay-150
+        `}>
           <div className="relative">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${textSecondary}`} />
-            <input type="text" placeholder="Search ticket # or issue..." className={`w-full pl-9 pr-3 py-2 rounded-lg text-sm outline-none focus:ring-1 focus:ring-purple-500/50 border ${inputClasses}`} />
+            <input 
+              type="text" 
+              placeholder="Search ticket # or issue..." 
+              className={`
+                w-full pl-9 pr-3 py-2 rounded-lg text-sm outline-none 
+                focus:ring-1 focus:ring-purple-500/50 border
+                ${inputClasses}
+                transition-all duration-200 focus:scale-[1.02]
+              `} 
+            />
           </div>
         </div>
 
         {/* Ticket List */}
         <div className="flex-1 overflow-y-auto">
-          {filteredTickets.map(ticket => (
+          {filteredTickets.map((ticket, index) => (
             <div
               key={ticket.id}
               onClick={() => handleTicketSelect(ticket.id)}
-              className={`p-4 border-b cursor-pointer transition-all ${activeTicketId === ticket.id
-                ? (isDark ? 'bg-slate-800/80 border-l-4 border-l-blue-500' : 'bg-purple-50 border-l-4 border-l-purple-500')
-                : 'border-l-4 border-l-transparent hover:bg-gray-50 dark:hover:bg-slate-800/50'
-                } ${isDark ? 'border-slate-800' : 'border-gray-200'}`}
+              className={`
+                p-4 border-b cursor-pointer transition-all
+                ${activeTicketId === ticket.id
+                  ? (isDark ? 'bg-slate-800/80 border-l-4 border-l-blue-500' : 'bg-purple-50 border-l-4 border-l-purple-500')
+                  : 'border-l-4 border-l-transparent hover:bg-gray-50 dark:hover:bg-slate-800/50'
+                }
+                ${isDark ? 'border-slate-800' : 'border-gray-200'}
+                animate-in slide-in-from-left duration-300
+                fade-in
+                ${index < 5 ? `delay-${index * 75 + 200}` : 'delay-500'}
+              `}
             >
               <div className="flex justify-between items-start mb-1">
                 <h4 className={`text-sm font-bold line-clamp-1 ${ticket.unread ? textPrimary : textSecondary}`}>{ticket.issue}</h4>
@@ -264,47 +314,59 @@ const SupportPage = () => {
               </div>
 
               <div className="flex justify-between items-center">
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${getStatusColor(ticket.status, isDark)}`}>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${getStatusColor(ticket.status, isDark)} transition-all duration-300 hover:scale-105`}>
                   {ticket.status}
                 </span>
-                {ticket.unread && <div className={`w-2 h-2 rounded-full ${isDark ? 'bg-blue-500' : 'bg-purple-500'}`}></div>}
+                {ticket.unread && <div className={`w-2 h-2 rounded-full animate-pulse ${isDark ? 'bg-blue-500' : 'bg-purple-500'}`}></div>}
               </div>
             </div>
           ))}
           {filteredTickets.length === 0 && (
-            <div className="p-8 text-center text-gray-500 text-sm">No tickets found</div>
+            <div className="p-8 text-center text-gray-500 text-sm animate-in fade-in duration-300">No tickets found</div>
           )}
         </div>
       </div>
 
       {/* MAIN CHAT AREA */}
-      <Chat
-        ticket={activeTicket}
-        staffList={STAFF_MEMBERS}
-        showAssignment={true}     // admin can assign
-        showStatus={true}
-        onSendMessage={handleSendMessage}
-        onAssigneeChange={handleAssigneeChange}
-        onStatusChange={handleStatusChange}
-      />
-
+      <div className={`
+        flex-1 transition-all duration-700
+        ${isPageLoaded ? 'opacity-100' : 'opacity-0'}
+      `}>
+        <Chat
+          ticket={activeTicket}
+          staffList={STAFF_MEMBERS}
+          showAssignment={true}     // admin can assign
+          showStatus={true}
+          onSendMessage={handleSendMessage}
+          onAssigneeChange={handleAssigneeChange}
+          onStatusChange={handleStatusChange}
+        />
+      </div>
 
       {/* CREATE TICKET MODAL */}
       {showTicketModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className={`rounded-2xl shadow-2xl w-full max-w-md border overflow-hidden animate-in zoom-in-95 duration-200 ${containerClasses}`}>
+          <div className={`
+            rounded-2xl shadow-2xl w-full max-w-md border overflow-hidden
+            ${containerClasses}
+            animate-in zoom-in-95 duration-200
+          `}>
             <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'border-slate-800 bg-slate-900' : 'border-gray-200 bg-gray-50'}`}>
               <h3 className={`font-bold ${textPrimary}`}>Create Support Ticket</h3>
               <button onClick={() => setShowTicketModal(false)} className={`transition-colors ${textSecondary} hover:text-red-500`}><XCircle className="w-6 h-6" /></button>
             </div>
             <div className="p-6 space-y-5">
-              <div>
+              <div className="animate-in slide-in-from-top duration-200 delay-75">
                 <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${textSecondary}`}>Issue Type</label>
                 <div className="relative">
                   <select
                     value={ticketForm.type}
                     onChange={(e) => setTicketForm({ ...ticketForm, type: e.target.value })}
-                    className={`w-full p-3 border rounded-xl text-sm outline-none appearance-none cursor-pointer focus:ring-2 transition-all ${isDark ? 'bg-slate-800 border-slate-700 text-white focus:ring-blue-500/20' : 'bg-white border-gray-200 text-gray-900 focus:ring-purple-500/20 focus:border-purple-400'}`}
+                    className={`
+                      w-full p-3 border rounded-xl text-sm outline-none appearance-none cursor-pointer
+                      focus:ring-2 transition-all
+                      ${isDark ? 'bg-slate-800 border-slate-700 text-white focus:ring-blue-500/20' : 'bg-white border-gray-200 text-gray-900 focus:ring-purple-500/20 focus:border-purple-400'}
+                    `}
                   >
                     <option>Technical Issue</option>
                     <option>Billing Dispute</option>
@@ -315,13 +377,17 @@ const SupportPage = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="animate-in slide-in-from-top duration-200 delay-100">
                 <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${textSecondary}`}>Priority</label>
                 <div className="relative">
                   <select
                     value={ticketForm.priority}
                     onChange={(e) => setTicketForm({ ...ticketForm, priority: e.target.value })}
-                    className={`w-full p-3 border rounded-xl text-sm outline-none appearance-none cursor-pointer focus:ring-2 transition-all ${isDark ? 'bg-slate-800 border-slate-700 text-white focus:ring-blue-500/20' : 'bg-white border-gray-200 text-gray-900 focus:ring-purple-500/20 focus:border-purple-400'}`}
+                    className={`
+                      w-full p-3 border rounded-xl text-sm outline-none appearance-none cursor-pointer
+                      focus:ring-2 transition-all
+                      ${isDark ? 'bg-slate-800 border-slate-700 text-white focus:ring-blue-500/20' : 'bg-white border-gray-200 text-gray-900 focus:ring-purple-500/20 focus:border-purple-400'}
+                    `}
                   >
                     <option>High</option>
                     <option>Medium</option>
@@ -331,19 +397,40 @@ const SupportPage = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="animate-in slide-in-from-top duration-200 delay-125">
                 <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${textSecondary}`}>Description</label>
                 <textarea
                   value={ticketForm.description}
                   onChange={(e) => setTicketForm({ ...ticketForm, description: e.target.value })}
                   placeholder="Describe the issue..."
-                  className={`w-full p-3 border rounded-xl text-sm outline-none focus:ring-2 min-h-[120px] resize-none transition-all ${isDark ? 'bg-slate-800 border-slate-700 text-white focus:ring-blue-500/20' : 'bg-white border-gray-200 text-gray-900 focus:ring-purple-500/20 focus:border-purple-400'}`}
+                  className={`
+                    w-full p-3 border rounded-xl text-sm outline-none focus:ring-2 min-h-[120px] resize-none transition-all
+                    ${isDark ? 'bg-slate-800 border-slate-700 text-white focus:ring-blue-500/20' : 'bg-white border-gray-200 text-gray-900 focus:ring-purple-500/20 focus:border-purple-400'}
+                  `}
                 ></textarea>
               </div>
             </div>
             <div className={`p-4 border-t flex gap-3 justify-end ${isDark ? 'border-slate-800 bg-slate-900' : 'border-gray-200 bg-gray-50'}`}>
-              <button onClick={() => setShowTicketModal(false)} className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-gray-600 hover:bg-gray-200'}`}>Cancel</button>
-              <button onClick={handleCreateTicket} className={`px-6 py-2 text-sm font-bold text-white rounded-lg shadow-lg hover:shadow-xl transition-all active:scale-95 ${isDark ? 'bg-blue-600 hover:bg-blue-500' : 'bg-purple-600 hover:bg-purple-500'}`}>Create Ticket</button>
+              <button 
+                onClick={() => setShowTicketModal(false)} 
+                className={`
+                  px-4 py-2 text-sm font-medium rounded-lg transition-all
+                  ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-gray-600 hover:bg-gray-200'}
+                  hover:scale-105 active:scale-95
+                `}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleCreateTicket} 
+                className={`
+                  px-6 py-2 text-sm font-bold text-white rounded-lg shadow-lg hover:shadow-xl transition-all
+                  ${isDark ? 'bg-blue-600 hover:bg-blue-500' : 'bg-purple-600 hover:bg-purple-500'}
+                  hover:scale-105 active:scale-95
+                `}
+              >
+                Create Ticket
+              </button>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   MessageSquare,
   Clock,
@@ -20,6 +20,15 @@ import { topCardsData, lightModeCardData, recentTickets, recentPayments, lightMo
 const DashboardPage = () => {
   const { theme, toggleTheme, isDark } = useTheme();
 
+  // Add initial load animation
+  useEffect(() => {
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.5s ease-in-out';
+    requestAnimationFrame(() => {
+      document.body.style.opacity = '1';
+    });
+  }, []);
+
   // Get icon component by name
   const getIconComponent = (iconName) => {
     const icons = {
@@ -34,7 +43,7 @@ const DashboardPage = () => {
   return (
     <div className={`min-h-screen p-6 ${isDark ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-gray-50 to-gray-100'}`}>
       {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 animate-fade-in">
         <div>
           <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dashboard</h1>
           <p className={`mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Welcome back! Here's what's happening today.</p>
@@ -58,6 +67,7 @@ const DashboardPage = () => {
               iconColor={isDark ? card.iconColor : lightModeData.iconColor}
               trend={card.trend}
               isDark={isDark}
+              index={index}
             />
           );
         })}
@@ -66,7 +76,7 @@ const DashboardPage = () => {
       {/* MAIN CONTENT */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* RECENT TICKETS */}
-        <div className={`rounded-2xl overflow-hidden ${isDark ? 'bg-gray-800 shadow-xl shadow-black/20' : 'bg-white shadow-lg'}`}>
+        <div className={`rounded-2xl overflow-hidden animate-slide-up ${isDark ? 'bg-gray-800 shadow-xl shadow-black/20' : 'bg-white shadow-lg'}`} style={{ animationDelay: '0.3s' }}>
           <div className={`p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
@@ -85,12 +95,13 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody className={isDark ? 'divide-y divide-gray-700' : 'divide-y divide-gray-200'}>
-                {recentTickets.map((ticket) => (
+                {recentTickets.map((ticket, index) => (
                   <TicketRow
                     key={ticket.id}
                     subject={`${ticket.ticketNumber} - ${ticket.subject}`}
                     customer={ticket.customer}
                     isDark={isDark}
+                    index={index}
                   />
                 ))}
               </tbody>
@@ -99,7 +110,7 @@ const DashboardPage = () => {
         </div> 
 
         {/* RECENT PAYMENTS */}
-        <div className={`rounded-2xl overflow-hidden ${isDark ? 'bg-gray-800 shadow-xl shadow-black/20' : 'bg-white shadow-lg'}`}>
+        <div className={`rounded-2xl overflow-hidden animate-slide-up ${isDark ? 'bg-gray-800 shadow-xl shadow-black/20' : 'bg-white shadow-lg'}`} style={{ animationDelay: '0.4s' }}>
           <div className={`p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
@@ -127,6 +138,7 @@ const DashboardPage = () => {
                     status={payment.status}
                     avatarColor={isDark ? payment.avatarColor : lightModeAvatarColors[index] || lightModeAvatarColors[0]}
                     isDark={isDark}
+                    index={index}
                   />
                 ))}
               </tbody>
@@ -134,51 +146,175 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Add animation styles */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes cardEntrance {
+          from {
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
+        @keyframes rowEntrance {
+          from {
+            opacity: 0;
+            transform: translateX(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        
+        @keyframes pulseGlow {
+          0%, 100% {
+            box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+          }
+        }
+        
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-5px);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        .animate-slide-up {
+          animation: slideUp 0.5s ease-out forwards;
+          opacity: 0;
+        }
+        
+        .animate-card-entrance {
+          animation: cardEntrance 0.4s ease-out forwards;
+          opacity: 0;
+        }
+        
+        .animate-row-entrance {
+          animation: rowEntrance 0.3s ease-out forwards;
+          opacity: 0;
+        }
+        
+        .animate-pulse-glow {
+          animation: pulseGlow 2s infinite;
+        }
+        
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        
+        .hover-lift {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hover-lift:hover {
+          transform: translateY(-4px);
+        }
+        
+        .hover-glow {
+          transition: all 0.3s ease;
+        }
+        
+        .hover-glow:hover {
+          box-shadow: ${isDark ? '0 20px 40px rgba(0, 0, 0, 0.3)' : '0 20px 40px rgba(0, 0, 0, 0.1)'};
+        }
+      `}</style>
     </div>
   );
 };
 
 /* CARD COMPONENT */
-const DashboardCard = ({ title, value, change, icon, iconBg, iconColor, trend, isDark }) => (
-  <div className={`rounded-2xl p-6 transition-all duration-300 ${isDark ? 'bg-gray-800 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-black/30' : 'bg-white shadow-lg hover:shadow-xl'}`}>
+const DashboardCard = ({ title, value, change, icon, iconBg, iconColor, trend, isDark, index }) => (
+  <div 
+    className={`rounded-2xl p-6 transition-all duration-300 hover-lift hover-glow animate-card-entrance ${
+      isDark ? 'bg-gray-800 shadow-xl shadow-black/20 hover:shadow-2xl hover:shadow-black/30' : 'bg-white shadow-lg hover:shadow-xl'
+    }`}
+    style={{ 
+      animationDelay: `${index * 0.1}s`,
+      animationFillMode: 'forwards'
+    }}
+  >
     <div className="flex justify-between items-start">
       <div>
         <p className={`text-sm font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{title}</p>
         <h2 className={`text-2xl font-bold mt-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>{value}</h2>
         <div className={`flex items-center mt-2 ${trend === 'up' ? (isDark ? 'text-green-400' : 'text-green-600') : (isDark ? 'text-red-400' : 'text-red-600')}`}>
-          <TrendingUp className={`h-4 w-4 mr-1 ${trend === 'down' ? 'rotate-180' : ''}`} />
+          <TrendingUp className={`h-4 w-4 mr-1 transition-transform duration-300 ${trend === 'down' ? 'rotate-180' : ''}`} />
           <span className="text-sm font-medium">{change}</span>
           <span className={`text-sm ml-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>from last month</span>
         </div>
       </div>
-      <div className={`${iconBg} p-3 rounded-xl ${isDark ? 'backdrop-blur-sm' : ''}`}>
-        <div className={iconColor}>{icon}</div>
+      <div className={`${iconBg} p-3 rounded-xl animate-float ${isDark ? 'backdrop-blur-sm' : ''}`}>
+        <div className={`${iconColor} transition-transform duration-300 group-hover:scale-110`}>{icon}</div>
       </div>
     </div>
   </div>
 );
 
 /* TICKET ROW */
-const TicketRow = ({ subject, customer, isDark }) => {
+const TicketRow = ({ subject, customer, isDark, index }) => {
   return (
-    <tr className={`transition-colors duration-150 ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}`}>
+    <tr 
+      className={`transition-all duration-300 animate-row-entrance ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}`}
+      style={{ 
+        animationDelay: `${0.1 + (index * 0.05)}s`,
+        animationFillMode: 'forwards'
+      }}
+    >
       <td className="py-4 px-6">
         <div className="flex items-center">
-          <div className={`h-10 w-10 rounded-lg flex-shrink-0 flex items-center justify-center mr-3 ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
-            <MessageSquare className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+          <div className={`h-10 w-10 rounded-lg flex-shrink-0 flex items-center justify-center mr-3 transition-transform duration-300 hover:scale-110 ${
+            isDark ? 'bg-gray-900' : 'bg-gray-100'
+          }`}>
+            <MessageSquare className={`h-5 w-5 transition-colors duration-300 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
           </div>
-          <span className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{subject}</span>
+          <span className={`font-medium truncate transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>{subject}</span>
         </div>
       </td>
       <td className="py-4 px-6">
-        <span className={`truncate ${isDark ? 'text-gray-300' : 'text-gray-900'}`}>{customer}</span>
+        <span className={`truncate transition-colors duration-300 ${isDark ? 'text-gray-300' : 'text-gray-900'}`}>{customer}</span>
       </td>
     </tr>
   );
 };
 
 /* PAYMENT ROW */
-const PaymentRow = ({ name, amount, status, date, avatarColor, isDark }) => {
+const PaymentRow = ({ name, amount, status, date, avatarColor, isDark, index }) => {
   const statusStyles = {
     Paid: isDark ? "bg-green-900/30 text-green-400 border border-green-800/50" : "bg-green-100 text-green-700 border border-green-200",
     Pending: isDark ? "bg-yellow-900/30 text-yellow-400 border border-yellow-800/50" : "bg-yellow-100 text-yellow-700 border border-yellow-200",
@@ -186,20 +322,26 @@ const PaymentRow = ({ name, amount, status, date, avatarColor, isDark }) => {
   };
 
   return (
-    <tr className={`transition-colors duration-150 ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}`}>
+    <tr 
+      className={`transition-all duration-300 animate-row-entrance ${isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'}`}
+      style={{ 
+        animationDelay: `${0.1 + (index * 0.05)}s`,
+        animationFillMode: 'forwards'
+      }}
+    >
       <td className="py-4 px-6">
         <div className="flex items-center">
-          <div className={`h-10 w-10 rounded-full ${avatarColor} flex items-center justify-center text-white font-semibold mr-3`}>
+          <div className={`h-10 w-10 rounded-full ${avatarColor} flex items-center justify-center text-white font-semibold mr-3 transition-all duration-300 hover:scale-110`}>
             {name.charAt(0)}
           </div>
-          <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{name}</span>
+          <span className={`font-medium transition-colors duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>{name}</span>
         </div>
       </td>
       <td className="py-4 px-6">
-        <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{amount}</span>
+        <span className={`font-bold transition-all duration-300 ${isDark ? 'text-white' : 'text-gray-900'}`}>{amount}</span>
       </td>
       <td className="py-4 px-6">
-        <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${statusStyles[status]}`}>
+        <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 hover:scale-105 ${statusStyles[status]}`}>
           {status}
         </span>
       </td>
