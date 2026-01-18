@@ -14,7 +14,7 @@ const Breadcrumb = () => {
     const pathnames = location.pathname.split('/').filter((x) => x);
     const items = [];
 
-    const dashboardPath = user?.role === 'admin' ? '/dashboard' : '/franchise-dashboard';
+    const dashboardPath = ['admin', 'staff', 'admin_staff'].includes(user?.role) ? '/dashboard' : '/franchise-dashboard';
     
     // Handle root or dashboard-only paths
     if (pathnames.length === 0 || 
@@ -127,4 +127,3 @@ const Breadcrumb = () => {
 };
 
 export default Breadcrumb;
-

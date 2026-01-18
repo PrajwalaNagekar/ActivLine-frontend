@@ -124,6 +124,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     admin: adminSidebarItems,
     franchise: franchiseSidebarItems,
     staff: staffSidebarItems,
+    admin_staff: staffSidebarItems,
   };
 
   const sidebarItems = sidebarItemsMap[user?.role] || []; const isItemActive = (item) =>
@@ -135,7 +136,7 @@ const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
       ? 'Super Admin'
       : user?.role === 'franchise'
         ? 'Franchise Admin'
-        : user?.role === 'staff'
+        : ['staff', 'admin_staff'].includes(user?.role)
           ? 'Staff'
           : 'User';
 

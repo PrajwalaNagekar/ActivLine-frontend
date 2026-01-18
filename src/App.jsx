@@ -5,6 +5,7 @@ import Router from "./routes/Router";
 import "./App.css";
 import { Toaster } from "react-hot-toast";
 import AppLoaderGate from "./components/loaders/AppLoaderGate";
+import cors from "cors";
 
 function App() {
   return (

@@ -138,7 +138,7 @@ const Router = () => {
           <Route
             path="staff-notifications"
             element={
-              <ProtectedRoute allowedRoles={["staff"]}>
+              <ProtectedRoute allowedRoles={["staff", "admin_staff"]}>
                 
                   <StaffNotifications />
                 
@@ -149,7 +149,7 @@ const Router = () => {
           <Route
             path="dashboard"
             element={
-              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
                 
                   <DashboardPage />
                 
@@ -282,7 +282,7 @@ const Router = () => {
           <Route
             path="reports"
             element={
-              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
                 
                   <Reports />
                 
@@ -292,7 +292,7 @@ const Router = () => {
           <Route
             path="logs"
             element={
-              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
                 
                   <Logs />
                 
@@ -302,7 +302,7 @@ const Router = () => {
           <Route
             path="plans"
             element={
-              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
                 
                   <Plans />
                 
@@ -347,7 +347,7 @@ const Router = () => {
           <Route
             path="assigned-tickets"
             element={
-              <ProtectedRoute allowedRoles={["staff"]}>
+              <ProtectedRoute allowedRoles={["staff", "admin_staff"]}>
                 
                   <AssignedTickets />
                 
@@ -358,7 +358,7 @@ const Router = () => {
           <Route
             path="settings"
             element={
-              <ProtectedRoute allowedRoles={["admin", "staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
                 
                   <SettingsPage />
                 
@@ -369,7 +369,7 @@ const Router = () => {
           <Route
             path="profile"
             element={
-              <ProtectedRoute allowedRoles={["admin", "franchise", "staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "franchise", "staff", "admin_staff"]}>
                 <ProfileSwitcher
                   franchiseUser={franchiseUser}
                   onUpdate={setFranchiseUser}

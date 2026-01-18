@@ -11,98 +11,63 @@ import { useAuth } from "../../context/AuthContext.jsx";
 import { useTheme } from "../../context/ThemeContext";
 import ThemeToggle from "../../components/ThemeToggle";
 
+import { adminLogin } from "../../api/auth.api.js";
+
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const { isDark } = useTheme();
   const [apiError, setApiError] = useState("");
-  const [selectedRole, setSelectedRole] = useState("admin");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Role-based credentials
-  const roleCredentials = {
-    admin: {
-      email: "admin@activline.in",
-      password: "admin123",
-    },
-    franchise: {
-      email: "sathya@activline-franchise.in",
-      password: "franchise123",
-    },
-    staff: {
-      email: "staff@activline.in",
-      password: "staff123",
-    },
-  };
-
   const getInitialValues = () => ({
-    email: roleCredentials[selectedRole].email,
-    password: roleCredentials[selectedRole].password,
+    email: "",
+    password: "",
   });
 
-  const handleSubmit = async (values, { setSubmitting }) => {
-    try {
-      await new Promise((res) => setTimeout(res, 800));
+const handleSubmit = async (values, { setSubmitting }) => {
+  try {
+    const response = await adminLogin(values);
 
-      let loggedInRole = null;
+    const { user, accessToken, refreshToken } = response.data;
 
-      Object.keys(roleCredentials).forEach((role) => {
-        if (
-          values.email === roleCredentials[role].email &&
-          values.password === roleCredentials[role].password
-        ) {
-          loggedInRole = role;
-        }
-      });
+    // It's good practice to normalize the role to lowercase for consistency
+    const userWithNormalizedRole = { ...user, role: user.role.toLowerCase() };
 
-      if (!loggedInRole) {
-        throw new Error("Invalid email or password");
-      }
+    // save auth
+    login(userWithNormalizedRole, accessToken);
 
-      const userData = {
-        id:
-          loggedInRole === "admin"
-            ? "1"
-            : loggedInRole === "franchise"
-            ? "2"
-            : "3",
-        email: values.email,
-        name:
-          loggedInRole === "admin"
-            ? "Super Admin"
-            : loggedInRole === "franchise"
-            ? "Franchise Admin"
-            : "Staff User",
-        role: loggedInRole,
-        ...(loggedInRole === "franchise" && { franchiseId: "FR-101" }),
-        ...(loggedInRole === "staff" && { staffId: "ST-201" }),
-      };
+    // optional: store refresh token
+    localStorage.setItem("refreshToken", refreshToken);
 
-      const token = "dummy-jwt-token";
+    toast.success(`Welcome back, ${user.name}! 🚀`);
 
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("authUser", JSON.stringify(userData));
-      login(userData, token);
-
-      toast.success("Login successful 🚀");
-
-      if (loggedInRole === "admin") {
-        console.log("Login");
-        navigate("/admin/dashboard");
-      } else if (loggedInRole === "franchise") {
-        console.log("Login");
+    // role-based redirect
+    switch (userWithNormalizedRole.role) {
+      case "admin":
+        navigate("/dashboard");
+        break;
+      case "admin_staff":
+        navigate("/dashboard");
+        break;
+      case "staff":
+        navigate("/dashboard");
+        break;
+      case "franchise":
         navigate("/franchise-dashboard");
-      } else {
-        console.log("Login");
-
-        navigate("/staff/dashboard");
-      }
-    } catch (error) {
-      toast.error(error.message || "Login failed");
-    } finally {
-      setSubmitting(false);
+        break;
+      default:
+        toast.error("Unauthorized access: Unknown role.");
+        logout(); // Important: clear login state if role is invalid
+        break;
     }
-  };
+  } catch (error) {
+    const errorMessage = error.response?.data?.message || error.message || "Login failed";
+    toast.error(errorMessage);
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <div

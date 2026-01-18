@@ -10,43 +10,76 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // ✅ only for refresh
+  const [token, setToken] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  /* ---------- LOAD FROM STORAGE ON REFRESH ---------- */
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("user");
 
-    if (token && userData) {
+    if (storedToken && storedUser) {
       try {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(storedUser);
+
+        // 🔥 ROLE NORMALIZATION HERE
+        const normalizedUser = {
+          ...parsedUser,
+          role:
+            parsedUser.role === "SUPER_ADMIN"
+              ? "ADMIN"
+              : parsedUser.role,
+        };
+
+        setUser(normalizedUser);
+        setToken(storedToken);
+
+        localStorage.setItem("user", JSON.stringify(normalizedUser));
       } catch {
         localStorage.clear();
       }
     }
 
-    setLoading(false); // 🔥 loader ends forever after refresh
+    setLoading(false);
   }, []);
 
-  const login = (userData, token) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData);
+  /* ---------- LOGIN ---------- */
+  const login = (userData, tokenValue) => {
+    const normalizedUser = {
+      ...userData,
+      role:
+        userData.role === "SUPER_ADMIN"
+          ? "ADMIN"
+          : userData.role,
+    };
+
+    localStorage.setItem("token", tokenValue);
+    localStorage.setItem("user", JSON.stringify(normalizedUser));
+
+    setUser(normalizedUser);
+    setToken(tokenValue);
   };
 
+  /* ---------- LOGOUT ---------- */
   const logout = () => {
     localStorage.clear();
     setUser(null);
+    setToken(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        token, // ✅ IMPORTANT (YOU MISSED THIS)
         login,
         logout,
         loading,
         isAuthenticated: !!user,
-        isAdmin: () => user?.role === 'admin',
+        isAdmin: () =>
+          ["admin", "admin_staff"].includes(
+            user?.role?.toLowerCase()
+          ),
       }}
     >
       {children}
