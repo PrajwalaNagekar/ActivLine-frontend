@@ -8,7 +8,7 @@ export const getAllAdminStaff = async () => {
 
 // CREATE ADMIN STAFF
 export const createAdminStaff = async (payload) => {
-  const res = await api.post("api/auth/create-admin-staff", payload);
+  const res = await api.post("/api/auth/create-adminStaff", payload);
   return res.data;
 };
 

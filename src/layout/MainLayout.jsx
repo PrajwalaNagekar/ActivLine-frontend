@@ -38,10 +38,11 @@ const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // Desktop sidebar collapse
 
-  const handleSignOut = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleSignOut = async () => {
+  await logout();   // 🔥 now calls backend
+  navigate("/login");
+};
+
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

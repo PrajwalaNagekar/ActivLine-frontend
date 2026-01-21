@@ -15,3 +15,6 @@ export const adminLogin = async (arg1, arg2) => {
     throw error.response?.data || error.message;
   }
 };
+export const logoutApi = () => {
+  return api.post("/auth/logout");
+};

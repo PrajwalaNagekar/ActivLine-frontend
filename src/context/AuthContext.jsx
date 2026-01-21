@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-
+import { logoutApi } from "../api/auth.api";
 const AuthContext = createContext(null);
 
 export const useAuth = () => {
@@ -61,11 +61,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   /* ---------- LOGOUT ---------- */
-  const logout = () => {
+
+
+const logout = async () => {
+  try {
+    await logoutApi(); // 🔥 BACKEND LOGOUT
+  } catch (err) {
+    // even if API fails, continue logout
+    console.error("Logout API failed", err);
+  } finally {
     localStorage.clear();
     setUser(null);
     setToken(null);
-  };
+  }
+};
+
 
   return (
     <AuthContext.Provider

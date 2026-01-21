@@ -1,197 +1,11 @@
 
-//   import React, { useEffect, useMemo, useState } from "react";
-// import { useTheme } from "../../context/ThemeContext";
-// import { useAuth } from "../../context/AuthContext";
-// import Chat from "../../components/chat/Chat";
-// import api from "../../api/axios";
-// import { socket } from "../../socket/socket";
-
-// /* ---------- STATUS COLOR ---------- */
-// const getStatusColor = (status, isDark) => {
-//   const map = {
-//     OPEN: isDark ? "bg-yellow-500/10 text-yellow-400" : "bg-yellow-50 text-yellow-700",
-//     ASSIGNED: isDark ? "bg-blue-500/10 text-blue-400" : "bg-blue-50 text-blue-700",
-//     CLOSED: isDark ? "bg-green-500/10 text-green-400" : "bg-green-50 text-green-700",
-//   };
-//   return map[status] || "bg-gray-100 text-gray-600";
-// };
-
-// const Tickets = () => {
-//   const { isDark } = useTheme();
-//   const { user, token } = useAuth();
-
-//   const [tickets, setTickets] = useState([]);
-//   const [activeTicketId, setActiveTicketId] = useState(null);
-//   const [messages, setMessages] = useState([]);
-//   const [filterStatus, setFilterStatus] = useState("All");
-//   const [loading, setLoading] = useState(true);
-
-//   const activeTicket = tickets.find(t => t._id === activeTicketId);
-
-//   /* ---------- LOAD ROOMS ---------- */
-//   useEffect(() => {
-//     if (!token) return;
-
-//     setLoading(true);
-
-//     api.get("/api/chat/admin/rooms")
-//       .then(res => {
-//         const mapped = res.data.data.map(r => ({
-//           _id: r._id,
-//           ticketId: r._id.slice(-6).toUpperCase(),
-//           issue: "Customer Support Chat",
-//           customerName: r.customer?.fullName || "Guest User",
-//           status: r.status,
-//           assignedTo: r.assignedStaff?._id || null,
-//         }));
-
-//         setTickets(mapped);
-
-//         if (!activeTicketId && mapped.length) {
-//           setActiveTicketId(mapped[0]._id);
-//         }
-//       })
-//       .finally(() => setLoading(false));
-//   }, [token]);
-
-//   /* ---------- LOAD MESSAGES + SOCKET (🔥 FIXED) ---------- */
-//   useEffect(() => {
-//     if (!activeTicket?._id || !token) return;
-
-//     setMessages([]);
-
-//     // 1️⃣ Load chat history
-//     api.get(`/api/chat/admin/messages/${activeTicket._id}`)
-//       .then(res => setMessages(res.data.data || []))
-//       .catch(() => setMessages([]));
-
-//     // 2️⃣ 🔥 VERY IMPORTANT: attach ADMIN token to socket
-//     socket.auth = { token };
-
-//     if (!socket.connected) {
-//       socket.connect();
-//     }
-
-//     // 3️⃣ Join room AFTER connect
-//     socket.emit("join-room", activeTicket._id);
-
-//     const handleNewMessage = (msg) => {
-//       setMessages(prev => {
-//         if (prev.some(m => m._id === msg._id)) return prev;
-//         return [...prev, msg];
-//       });
-//     };
-
-//     socket.on("new-message", handleNewMessage);
-
-//     return () => {
-//       socket.off("new-message", handleNewMessage);
-//       socket.disconnect();
-//     };
-//   }, [activeTicket?._id, token]);
-
-//   /* ---------- SEND MESSAGE (ADMIN → CUSTOMER) ---------- */
-//   const sendMessage = (text) => {
-//     if (!text.trim() || !activeTicket) return;
-
-//     socket.emit("send-message", {
-//       roomId: activeTicket._id,
-//       message: text,
-//     });
-//   };
-
-//   /* ---------- FILTER ---------- */
-//   const filteredTickets = useMemo(() => {
-//     if (filterStatus === "All") return tickets;
-//     return tickets.filter(t => t.status === filterStatus);
-//   }, [tickets, filterStatus]);
-
-//   if (!token) {
-//     return (
-//       <div className="h-full flex items-center justify-center text-red-500">
-//         Unauthorized – Please login again
-//       </div>
-//     );
-//   }
-
-//   if (loading) {
-//     return (
-//       <div className="h-full flex items-center justify-center">
-//         Loading tickets...
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="flex h-[calc(100vh-140px)] border rounded-xl overflow-hidden">
-
-//       {/* ---------- SIDEBAR ---------- */}
-//       <div className={`w-80 border-r ${isDark ? "bg-slate-900" : "bg-white"}`}>
-//         <div className="p-4 border-b">
-//           <h2 className="font-bold text-lg">Support Inbox</h2>
-//           <div className="flex gap-1 mt-3">
-//             {["All", "OPEN", "ASSIGNED", "CLOSED"].map(s => (
-//               <button
-//                 key={s}
-//                 onClick={() => setFilterStatus(s)}
-//                 className={`px-3 py-1 text-xs rounded ${
-//                   filterStatus === s
-//                     ? "bg-purple-600 text-white"
-//                     : "text-gray-500"
-//                 }`}
-//               >
-//                 {s}
-//               </button>
-//             ))}
-//           </div>
-//         </div>
-
-//         <div className="overflow-y-auto">
-//           {filteredTickets.map(t => (
-//             <div
-//               key={t._id}
-//               onClick={() => setActiveTicketId(t._id)}
-//               className={`p-4 cursor-pointer border-b
-//                 ${activeTicketId === t._id
-//                   ? isDark ? "bg-slate-800" : "bg-purple-50"
-//                   : isDark ? "hover:bg-slate-800" : "hover:bg-gray-50"}`}
-//             >
-//               <div className="font-semibold text-sm">{t.issue}</div>
-//               <div className="text-xs text-gray-500">{t.customerName}</div>
-//               <span className={`text-[10px] px-2 py-0.5 rounded ${getStatusColor(t.status, isDark)}`}>
-//                 {t.status}
-//               </span>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-
-//       {/* ---------- CHAT ---------- */}
-//       <div className="flex-1">
-//         {activeTicket ? (
-//           <Chat
-//             ticket={activeTicket}
-//             messages={messages}
-//             onSendMessage={sendMessage}
-//           />
-//         ) : (
-//           <div className="h-full flex items-center justify-center text-gray-400">
-//             Select a chat
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Tickets;
-
-
 import React, { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import Chat from "../../components/chat/Chat";
 import api from "../../api/axios";
+import { getAssignedRoomsCount } from "../../api/tickets.api";
+
 import { socket } from "../../socket/socket";
 import { 
   Search, 
@@ -202,6 +16,7 @@ import {
   AlertCircle, 
   ChevronLeft, 
   ChevronRight, 
+  ChevronDown,
   Filter, 
   RefreshCw,
   Inbox,
@@ -209,6 +24,9 @@ import {
   Shield,
   Sparkles
 } from "lucide-react";
+
+
+
 
 /* ---------- STATUS COLOR ---------- */
 const getStatusColor = (status, isDark) => {
@@ -219,6 +37,11 @@ const getStatusColor = (status, isDark) => {
     ASSIGNED: isDark 
       ? "bg-blue-500/15 text-blue-300 border border-blue-500/30" 
       : "bg-blue-100 text-blue-700 border border-blue-200",
+
+    RESOLVED: isDark
+      ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+      : "bg-emerald-100 text-emerald-700 border border-emerald-200",
+
     CLOSED: isDark 
       ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" 
       : "bg-emerald-100 text-emerald-700 border border-emerald-200",
@@ -226,10 +49,22 @@ const getStatusColor = (status, isDark) => {
   return map[status] || (isDark ? "bg-gray-800 text-gray-300" : "bg-gray-100 text-gray-700");
 };
 
+
+const ALLOWED_STATUS_TRANSITIONS = {
+  OPEN: ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"],
+  ASSIGNED: ["IN_PROGRESS", "RESOLVED", "CLOSED","OPEN"],
+  IN_PROGRESS: ["IN_PROGRESS", "RESOLVED", "CLOSED"],
+  RESOLVED: ["RESOLVED", "OPEN", "IN_PROGRESS", "CLOSED"],
+  CLOSED: ["CLOSED"],
+};
+
+
 const getStatusIcon = (status) => {
   switch(status) {
     case 'OPEN': return <AlertCircle className="w-3 h-3" />;
     case 'ASSIGNED': return <Users className="w-3 h-3" />;
+    case 'RESOLVED': return <CheckCircle className="w-3 h-3" />;
+
     case 'CLOSED': return <CheckCircle className="w-3 h-3" />;
     default: return <MessageSquare className="w-3 h-3" />;
   }
@@ -247,8 +82,21 @@ const Tickets = () => {
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+const [assignedRoomCount, setAssignedRoomCount] = useState(0);
+const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const activeTicket = tickets.find(t => t._id === activeTicketId);
+  const [staffList, setStaffList] = useState([]);
+
+
+  const loadStaff = async () => {
+  try {
+    const res = await api.get("/api/admin/staff");
+    setStaffList(res.data.data || []);
+  } catch (err) {
+    console.error("Failed to load staff", err);
+  }
+};
 
   /* ---------- LOAD ROOMS ---------- */
   const loadTickets = () => {
@@ -281,10 +129,78 @@ const Tickets = () => {
         setRefreshing(false);
       });
   };
+const assignStaff = async (roomId, staffId) => {
+  try {
+    const res = await api.post("/api/chat/admin/assign", {
+      roomId,
+      staffId,
+    });
 
-  useEffect(() => {
-    loadTickets();
-  }, [token]);
+    setTickets(prev =>
+      prev.map(t =>
+        t._id === roomId
+          ? {
+              ...t,
+              assignedTo: res.data.data.assignedStaff,
+              status: res.data.data.status, // ASSIGNED
+            }
+          : t
+      )
+    );
+  } catch (err) {
+    console.error("❌ Assign staff failed", err.response?.data || err);
+  }
+};
+
+  const updateTicketStatus = async (roomId, status) => {
+  try {
+    const res = await api.patch("/api/chat/admin/status", {
+      roomId,
+      status,
+    });
+
+    // Update UI instantly
+    setTickets(prev =>
+      prev.map(t =>
+        t._id === roomId
+          ? { ...t, status: res.data.data.status }
+          : t
+      )
+    );
+  } catch (err) {
+    console.error(
+      "❌ Status update failed",
+      err.response?.data || err.message
+    );
+  }
+};
+
+
+
+
+ useEffect(() => {
+  loadTickets();
+  loadStaff();
+  getAssignedRoomsCount()
+    .then(count => setAssignedRoomCount(count))
+    .catch(() => setAssignedRoomCount(0));
+}, [token]);
+
+// const unassignStaff = async (roomId) => {
+//   try {
+//     await api.patch("/api/chat/admin/unassign", { roomId });
+
+//     setTickets(prev =>
+//       prev.map(t =>
+//         t._id === roomId
+//           ? { ...t, assignedTo: null, status: "OPEN" }
+//           : t
+//       )
+//     );
+//   } catch (err) {
+//     console.error("Unassign failed", err);
+//   }
+// };
 
   /* ---------- LOAD MESSAGES + SOCKET (🔥 FIXED) ---------- */
   useEffect(() => {
@@ -322,6 +238,17 @@ const Tickets = () => {
     };
   }, [activeTicket?._id, token]);
 
+  useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (!e.target.closest(".filter-container")) {
+      setIsFilterOpen(false);
+    }
+  };
+
+  document.addEventListener("click", handleClickOutside);
+  return () => document.removeEventListener("click", handleClickOutside);
+}, []);
+
   /* ---------- SEND MESSAGE (ADMIN → CUSTOMER) ---------- */
   const sendMessage = (text) => {
     if (!text.trim() || !activeTicket) return;
@@ -357,7 +284,9 @@ const Tickets = () => {
   const stats = {
     total: tickets.length,
     open: tickets.filter(t => t.status === "OPEN").length,
-    assigned: tickets.filter(t => t.status === "ASSIGNED").length,
+    assigned: assignedRoomCount,
+
+    resolved: tickets.filter(t => t.status === "RESOLVED").length,
     closed: tickets.filter(t => t.status === "CLOSED").length,
   };
 
@@ -492,8 +421,8 @@ const Tickets = () => {
             </div>
 
             {/* Status Filters */}
-            <div className="flex flex-wrap gap-1 mt-2">
-              {["All", "OPEN", "ASSIGNED", "CLOSED"].map(s => (
+            {/* <div className="flex flex-wrap gap-1 mt-2">
+              {["All", "OPEN", "ASSIGNED", "RESOLVED", "CLOSED"].map(s => (
                 <button
                   key={s}
                   onClick={() => setFilterStatus(s)}
@@ -519,7 +448,61 @@ const Tickets = () => {
                   )}
                 </button>
               ))}
-            </div>
+            </div> */}
+
+            {/* Filter Dropdown */}
+<div className="relative mt-2  filter-container">
+  <button
+    onClick={() => setIsFilterOpen(prev => !prev)}
+    className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition
+      ${isDark
+        ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+        : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
+    `}
+  >
+    <Filter className="w-4 h-4" />
+    <span>
+      {filterStatus === "All" ? "All Tickets" : filterStatus}
+    </span>
+    <ChevronDown
+      className={`w-3 h-3 transition-transform ${
+        isFilterOpen ? "rotate-180" : ""
+      }`}
+    />
+  </button>
+{isFilterOpen && (
+  <div
+    className={`absolute z-50 mt-2 w-44 rounded-md shadow-lg border
+      ${isDark
+        ? "bg-gray-900 border-gray-700"
+        : "bg-white border-gray-200"}
+    `}
+  >
+    {["All", "OPEN", "ASSIGNED", "RESOLVED", "CLOSED"].map(status => (
+      <button
+        key={status}
+        onClick={() => {
+          setFilterStatus(status);
+          setIsFilterOpen(false);
+        }}
+        className={`w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition
+          ${filterStatus === status
+            ? isDark
+              ? "bg-blue-500/20 text-blue-400"
+              : "bg-blue-100 text-blue-600"
+            : isDark
+              ? "text-gray-300 hover:bg-gray-800"
+              : "text-gray-700 hover:bg-gray-100"}
+        `}
+      >
+        {status !== "All" && getStatusIcon(status)}
+        <span>{status}</span>
+      </button>
+    ))}
+  </div>
+)}
+</div>
+
           </div>
 
           {/* Tickets List */}
@@ -662,17 +645,27 @@ const Tickets = () => {
 
           {activeTicket ? (
             <div className="flex-1 overflow-hidden animate-fade-in">
-              <Chat
-                ticket={activeTicket}
-                messages={messages}
-                onSendMessage={sendMessage}
-                showAssignment={true}
-                staffList={[]}
-                showStatus={true}
-                isDark={isDark}
-                onAssigneeChange={() => {}}
-                onStatusChange={() => {}}
-              />
+       <Chat
+  ticket={activeTicket}
+  messages={messages}
+  onSendMessage={sendMessage}
+  showAssignment={true}
+  staffList={staffList}
+  showStatus={true}
+  isDark={isDark}
+  allowedStatuses={
+    ALLOWED_STATUS_TRANSITIONS[activeTicket.status] || []
+  }
+  onAssigneeChange={(staffId) =>
+    assignStaff(activeTicket._id, staffId)
+  }
+  onStatusChange={(status) =>
+    updateTicketStatus(activeTicket._id, status)
+  }
+/>
+
+
+
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-4 animate-fade-in">
