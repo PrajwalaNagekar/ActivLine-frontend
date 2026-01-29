@@ -1,4 +1,4 @@
-import { useState } from "react";
+// import { useState } from "react";
 import { 
   Edit, 
   Trash2, 
@@ -10,19 +10,24 @@ import {
   ChevronsLeft, 
   ChevronsRight 
 } from "lucide-react";
-import { itemsPerPageOptions } from "../../../../data/CannedResponsedata";
+// import { itemsPerPageOptions } from "../../../../data/CannedResponsedata";
+import { useEffect, useState } from "react";
+import { getCannedCategories } from "../../../../api/cannedResponse.api";
 
-const AllResponses = ({ 
-  responses, 
-  filteredResponses, 
-  onDelete, 
-  isDark, 
-  search, 
-  currentPage, 
-  setCurrentPage, 
-  itemsPerPage, 
-  setItemsPerPage 
+const AllResponses = ({
+  responses,
+  filteredResponses,
+  onDelete,
+  isDark,
+  search,
+  currentPage,
+  setCurrentPage,
+  itemsPerPage,
+  setItemsPerPage,
+  selectedCategory,
+  setSelectedCategory
 }) => {
+
   const [copiedId, setCopiedId] = useState(null);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ title: "", message: "" });
@@ -56,6 +61,19 @@ const AllResponses = ({
     setItemsPerPage(value);
     setCurrentPage(1);
   };
+const [categories, setCategories] = useState([]);
+
+useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const res = await getCannedCategories();
+      setCategories(res.data.data);
+    } catch (err) {
+      console.error("Failed to load categories", err);
+    }
+  };
+  fetchCategories();
+}, []);
 
   // Generate visible page numbers
   const getVisiblePageNumbers = () => {
@@ -87,20 +105,38 @@ const AllResponses = ({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            All Responses
-          </h3>
-          <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-            Showing {currentItems.length} of {filteredResponses.length} responses
-            {search && ` for "${search}"`}
-          </p>
-        </div>
-        
-        {/* Items per page selector */}
-       
-      </div>
+     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <div>
+    <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+      All Responses
+    </h3>
+    <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+      Showing {currentItems.length} of {filteredResponses.length} responses
+      {search && ` for "${search}"`}
+    </p>
+  </div>
+
+  {/* 🔽 CATEGORY DROPDOWN */}
+  <select
+    value={selectedCategory || ""}
+    onChange={(e) => setSelectedCategory(e.target.value)}
+    className={`px-4 py-2 rounded-lg border text-sm
+      ${isDark
+        ? "bg-gray-900 border-gray-700 text-white"
+        : "bg-white border-gray-300 text-gray-900"
+      }`}
+  >
+    <option value="" disabled>
+      Select Category
+    </option>
+    {categories.map((cat) => (
+      <option key={cat._id} value={cat._id}>
+        {cat.name}
+      </option>
+    ))}
+  </select>
+</div>
+
 
       {currentItems.length === 0 ? (
         <div className={`text-center py-16 border-2 border-dashed rounded-2xl ${isDark ? 'border-gray-700' : 'border-gray-300'}`}>

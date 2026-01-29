@@ -33,11 +33,8 @@ const handleSubmit = async (values, { setSubmitting }) => {
 
     const { user, accessToken, refreshToken } = response.data;
 
-    // It's good practice to normalize the role to lowercase for consistency
-    const userWithNormalizedRole = { ...user, role: user.role.toLowerCase() };
-
     // save auth
-    login(userWithNormalizedRole, accessToken);
+    login(user, accessToken);
 
     // optional: store refresh token
     localStorage.setItem("refreshToken", refreshToken);
@@ -45,7 +42,8 @@ const handleSubmit = async (values, { setSubmitting }) => {
     toast.success(`Welcome back, ${user.name}! 🚀`);
 
     // role-based redirect
-    switch (userWithNormalizedRole.role) {
+    switch (user.role.toLowerCase()) {
+      case "super_admin":
       case "admin":
         navigate("/dashboard");
         break;

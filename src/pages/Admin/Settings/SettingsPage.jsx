@@ -1,27 +1,70 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import SettingsTabs from "./SettingsTabs";
 import GeneralSettings from "./GeneralSettings";
 import CannedResponses from "../Settings/CannedResponses/CannedResponses";
 import ApiKeys from "./ApiKeys";
 import { useTheme } from "../../../context/ThemeContext";
 
+import Lottie from "lottie-react";
+import settingsAnimation from "../../../animations/Customer Care.json";
+
 const SettingsPage = () => {
-  const [activeTab, setActiveTab] = useState("general");
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(location.state?.tab || "general");
   const { isDark } = useTheme();
 
-  return (
-    <div className="p-6">
-      <h1 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Settings</h1>
+ return (
+  <div className="w-full px-2 pb-4">
+    {/* DO NOT constrain width */}
+    <div className="w-full">
 
-      <SettingsTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h1
+            className={`text-2xl font-bold ${
+              isDark ? "text-white" : "text-gray-900"
+            }`}
+          >
+            Settings
+          </h1>
+          <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+            Manage system preferences
+          </p>
+        </div>
 
-      <div className={`mt-6 rounded-lg shadow p-6 max-w-5xl ${isDark ? 'bg-slate-900 border border-slate-800' : 'bg-white'}`}>
+        {/* SMALL ANIMATION */}
+        <div className="w-60 h-25">
+          <Lottie animationData={settingsAnimation} loop autoplay />
+        </div>
+      </div>
+
+      {/* TABS */}
+      <div className="mb-1">
+        <SettingsTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+      </div>
+
+      {/* CONTENT */}
+      <div
+        className={`rounded-md p-3 ${
+          isDark
+            ? "bg-slate-900 border border-slate-800"
+            : "bg-white border border-gray-200"
+        }`}
+      >
         {activeTab === "general" && <GeneralSettings />}
         {activeTab === "canned" && <CannedResponses />}
         {activeTab === "api" && <ApiKeys />}
       </div>
     </div>
-  );
+  </div>
+);
+
 };
+
 
 export default SettingsPage;

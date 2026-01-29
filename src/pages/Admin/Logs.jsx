@@ -1,149 +1,257 @@
-import React, { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Activity } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Activity,
+  Filter,
+  RefreshCcw,
+  Search,
+} from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../context/AuthContext";
+import {
+  getAllLogs,
+  getMyLogs,
+} from "../../api/AvtiveLogs.api";
 
-/* ---------------- MOCK LOG DATA ---------------- */
-const INITIAL_LOGS = [
-    { id: 1, timestamp: "2026-01-05 10:12:34", user: "Admin", action: "Created new plan: Super Stream" },
-    { id: 2, timestamp: "2026-01-05 09:55:10", user: "Staff - John", action: "Updated subscriber details" },
-    { id: 3, timestamp: "2026-01-04 18:21:44", user: "Admin", action: "Suspended subscriber ID #1023" },
-    { id: 4, timestamp: "2026-01-04 16:02:11", user: "Staff - Jane", action: "Resolved support ticket #458" },
-    { id: 5, timestamp: "2026-01-04 14:45:29", user: "System", action: "Daily backup completed" },
-    { id: 6, timestamp: "2026-01-04 11:30:01", user: "Admin", action: "Updated staff role permissions" },
-    { id: 7, timestamp: "2026-01-03 19:10:55", user: "System", action: "Auto-renewal cron executed" },
-];
+import Lottie from "lottie-react";
+import activityAnimation from "../../animations/time tracker.json";
 
-/* ---------------- COMPONENT ---------------- */
+const ITEMS_PER_PAGE = 10;
+const ROLE_OPTIONS = ["ALL", "SUPER_ADMIN", "ADMIN", "ADMIN_STAFF", "STAFF", "CUSTOMER"];
+
 const Logs = () => {
-    const { isDark } = useTheme();
+  const { isDark } = useTheme();
+  const { user } = useAuth();
 
-    const [logs] = useState(INITIAL_LOGS);
-    const [currentPage, setCurrentPage] = useState(1);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
-    const ITEMS_PER_PAGE = 5;
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
 
-    /* ---------------- PAGINATION ---------------- */
-    const totalPages = Math.max(1, Math.ceil(logs.length / ITEMS_PER_PAGE));
+  /* ---------------- FETCH LOGS ---------------- */
+  const fetchLogs = async () => {
+  try {
+    setLoading(true);
 
-    const paginatedLogs = useMemo(() => {
-        const start = (currentPage - 1) * ITEMS_PER_PAGE;
-        return logs.slice(start, start + ITEMS_PER_PAGE);
-    }, [logs, currentPage]);
+    const isAdmin = ["ADMIN", "SUPER_ADMIN", "ADMIN_STAFF"].includes(user?.role);
 
-    return (
-        <div className="space-y-6">
+    const res = isAdmin
+      ? await getAllLogs()
+      : await getMyLogs();
 
-            {/* Header */}
-            <div>
-                <h1 className={`text-2xl font-semibold ${isDark ? "text-white" : "text-gray-900"}`}>
-                    System Activity Logs
-                </h1>
+    setLogs(res.data.data || []);
+  } catch (err) {
+    console.error("Failed to fetch logs", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
-            </div>
 
-            {/* Logs Table */}
-            <div className={`rounded-xl border overflow-hidden ${isDark ? "bg-slate-900 border-slate-800" : "bg-white border-gray-200"}`}>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead className={isDark ? "bg-slate-800/50" : "bg-gray-50"}>
-                            <tr>
-                                <th className={`px-6 py-3 text-xs font-semibold uppercase ${isDark ? "text-slate-400" : "text-gray-500"}`}>
-                                    Timestamp
-                                </th>
-                                <th className={`px-6 py-3 text-xs font-semibold uppercase ${isDark ? "text-slate-400" : "text-gray-500"}`}>
-                                    User
-                                </th>
-                                <th className={`px-6 py-3 text-xs font-semibold uppercase ${isDark ? "text-slate-400" : "text-gray-500"}`}>
-                                    Action
-                                </th>
-                            </tr>
-                        </thead>
+  useEffect(() => {
+    fetchLogs();
+  }, [user]);
 
-                        <tbody className={isDark ? "divide-y divide-slate-800" : "divide-y divide-gray-100"}>
-                            {paginatedLogs.map(log => (
-                                <tr key={log.id} className={isDark ? "hover:bg-slate-800/40" : "hover:bg-gray-50"}>
-                                    <td className={`px-6 py-4 text-sm ${isDark ? "text-slate-300" : "text-gray-700"}`}>
-                                        {log.timestamp}
-                                    </td>
-                                    <td className="px-6 py-4 flex items-center gap-2">
-                                        {/* <Activity className="w-4 h-4 text-blue-400" /> */}
-                                        <span className={isDark ? "text-white" : "text-gray-900"}>
-                                            {log.user}
-                                        </span>
-                                    </td>
-                                    <td className={`px-6 py-4 text-sm ${isDark ? "text-slate-300" : "text-gray-700"}`}>
-                                        {log.action}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+  /* ---------------- FILTER + SEARCH ---------------- */
+  const filteredLogs = useMemo(() => {
+    return logs.filter((log) => {
+      const matchRole =
+        roleFilter === "ALL" || log.actorRole === roleFilter;
 
-                {/* Pagination */}
-                <div
-                    className={`p-4 border-t flex items-center justify-between
-    ${isDark ? "border-slate-800" : "border-gray-200"}`}
-                >
-                    <span
-                        className={`text-sm ${isDark ? "text-slate-400" : "text-gray-500"}`}
-                    >
-                        Page {currentPage} of {totalPages}
-                    </span>
+      const matchSearch =
+        log.actorName?.toLowerCase().includes(search.toLowerCase()) ||
+        log.description?.toLowerCase().includes(search.toLowerCase()) ||
+        log.module?.toLowerCase().includes(search.toLowerCase());
 
-                    <div className="flex items-center gap-2">
-                        {/* Prev */}
-                        <button
-                            onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                            disabled={currentPage === 1}
-                            className={`p-2 rounded-lg border transition-colors
-        disabled:opacity-50 disabled:cursor-not-allowed
+      return matchRole && matchSearch;
+    });
+  }, [logs, search, roleFilter]);
+
+  /* ---------------- PAGINATION ---------------- */
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / ITEMS_PER_PAGE));
+
+  const paginatedLogs = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredLogs.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredLogs, currentPage]);
+
+  /* ---------------- UI ---------------- */
+  return (
+    <div className="space-y-6">
+
+      {/* HEADER */}
+    {/* ================= HEADER ================= */}
+<div
+  className={`flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl border
+    ${isDark
+      ? "bg-slate-900 border-slate-800"
+      : "bg-white border-gray-200"
+    }`}
+>
+  {/* LEFT: Animation + Logo */}
+  <div className="flex items-center gap-4">
+    {/* Animation */}
+  <div className="w-24 h-24 md:w-28 md:h-28">
+  <Lottie
+    animationData={activityAnimation}
+    loop
+    className="w-full h-full"
+  />
+</div>
+
+
+    {/* Logo */}
+    <div className="flex flex-col">
+      <h1
+        className={`text-2xl font-bold tracking-tight
+          ${isDark ? "text-white" : "text-gray-900"}`}
+      >
+        Activline Logs
+      </h1>
+      <p className={`text-sm ${isDark ? "text-slate-400" : "text-gray-500"}`}>
+        System activity & audit trail
+      </p>
+    </div>
+  </div>
+
+  {/* RIGHT: Search + Filter + Refresh */}
+  <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+
+    {/* SEARCH */}
+    <div className="relative w-full md:w-64">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <input
+        type="text"
+        placeholder="Search logs..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setCurrentPage(1);
+        }}
+        className={`w-full pl-10 pr-4 py-2 rounded-lg border outline-none transition
+          ${isDark
+            ? "bg-slate-800 border-slate-700 text-white placeholder-slate-400"
+            : "bg-white border-gray-300 text-gray-900 placeholder-gray-400"
+          }`}
+      />
+    </div>
+
+    {/* ROLE FILTER */}
+    <div className="relative">
+      <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <select
+        value={roleFilter}
+        onChange={(e) => {
+          setRoleFilter(e.target.value);
+          setCurrentPage(1);
+        }}
+        className={`pl-10 pr-4 py-2 rounded-lg border outline-none transition
+          ${isDark
+            ? "bg-slate-800 border-slate-700 text-white"
+            : "bg-white border-gray-300 text-gray-900"
+          }`}
+      >
+        {ROLE_OPTIONS.map((role) => (
+          <option key={role} value={role}>
+            {role === "ALL" ? "All Roles" : role.replace("_", " ")}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    {/* REFRESH */}
+    <button
+      onClick={fetchLogs}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition font-medium
         ${isDark
-                                    ? "border-slate-700 hover:bg-slate-800 text-slate-300"
-                                    : "border-gray-300 hover:bg-gray-100 text-gray-700"
-                                }`}
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
+          ? "border-slate-700 text-slate-300 hover:bg-slate-800"
+          : "border-gray-300 text-gray-700 hover:bg-gray-100"
+        }`}
+    >
+      <RefreshCcw className="w-4 h-4" />
+      Refresh
+    </button>
+  </div>
+</div>
 
-                        {/* Page Numbers */}
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                            <button
-                                key={page}
-                                onClick={() => setCurrentPage(page)}
-                                className={`px-3 py-1.5 rounded-lg text-sm font-medium border
-        ${currentPage === page
-                                        ? isDark
-                                            ? 'bg-blue-600 text-white border-blue-500'
-                                            : 'bg-purple-600 text-white border-purple-500'
-                                        : isDark
-                                            ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
-                                            : 'border-purple-200 text-purple-700 hover:bg-purple-50'
-                                    }`}
-                            >
-                                {page}
-                            </button>
-                        ))}
 
-                        {/* Next */}
-                        <button
-                            onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className={`p-2 rounded-lg border transition-colors
-        disabled:opacity-50 disabled:cursor-not-allowed
-        ${isDark
-                                    ? "border-slate-700 hover:bg-slate-800 text-slate-300"
-                                    : "border-gray-300 hover:bg-gray-100 text-gray-700"
-                                }`}
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
+      {/* TABLE */}
+      <div className={`rounded-xl border overflow-hidden
+        ${isDark ? "bg-slate-900 border-slate-800" : "bg-white border-gray-200"}`}
+      >
+        <table className="w-full text-left">
+          <thead className={isDark ? "bg-slate-800/60" : "bg-gray-50"}>
+            <tr>
+              <th className="px-6 py-3 text-sm font-semibold">Time</th>
+              <th className="px-6 py-3 text-sm font-semibold">User</th>
+              <th className="px-6 py-3 text-sm font-semibold">Role</th>
+              <th className="px-6 py-3 text-sm font-semibold">Action</th>
+            </tr>
+          </thead>
 
-            </div>
+          <tbody className={isDark ? "divide-y divide-slate-800" : "divide-y divide-gray-100"}>
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-6 text-center">Loading logs...</td>
+              </tr>
+            ) : paginatedLogs.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-6 text-center">No logs found</td>
+              </tr>
+            ) : (
+              paginatedLogs.map((log) => (
+                <tr key={log._id} className={isDark ? "hover:bg-slate-800/40" : "hover:bg-gray-50"}>
+                  <td className="px-6 py-4">
+                    {new Date(log.createdAt).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-blue-400" />
+                    {log.actorName}
+                  </td>
+                  <td className="px-6 py-4 font-medium">
+                    {log.actorRole}
+                  </td>
+                  <td className="px-6 py-4">
+                    {log.description}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+
+        {/* PAGINATION */}
+        <div className={`p-4 border-t flex justify-between items-center
+          ${isDark ? "border-slate-800" : "border-gray-200"}`}
+        >
+          <span className="text-sm text-gray-500">
+            Page {currentPage} of {totalPages}
+          </span>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded border"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded border"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default Logs;

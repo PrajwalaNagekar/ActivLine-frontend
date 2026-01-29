@@ -5,21 +5,29 @@ import { useAuth } from "../context/AuthContext";
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { isAuthenticated, user } = useAuth();
 
-  // 🔒 Not logged in → go to login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // 🔐 Role-based protection
+  const role = user?.role?.toUpperCase();
+
+  // 🔥 ADMIN & SUPER_ADMIN → FULL ACCESS
+  if (role === "ADMIN" || role === "SUPER_ADMIN") {
+    return children;
+  }
+
+  // 🔐 Other roles → check allowedRoles
   if (
     allowedRoles.length > 0 &&
-    !allowedRoles.includes(user?.role)
+    !allowedRoles.map(r => r.toUpperCase()).includes(role)
   ) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // ✅ Allowed
   return children;
 };
 
 export default ProtectedRoute;
+
+
+

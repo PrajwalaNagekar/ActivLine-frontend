@@ -22,19 +22,11 @@ export const AuthProvider = ({ children }) => {
       try {
         const parsedUser = JSON.parse(storedUser);
 
-        // 🔥 ROLE NORMALIZATION HERE
-        const normalizedUser = {
-          ...parsedUser,
-          role:
-            parsedUser.role === "SUPER_ADMIN"
-              ? "ADMIN"
-              : parsedUser.role,
-        };
-
-        setUser(normalizedUser);
+        setUser(parsedUser);
         setToken(storedToken);
 
-        localStorage.setItem("user", JSON.stringify(normalizedUser));
+        // Ensure storage is in sync with what we use
+        localStorage.setItem("user", JSON.stringify(parsedUser));
       } catch {
         localStorage.clear();
       }
@@ -45,18 +37,10 @@ export const AuthProvider = ({ children }) => {
 
   /* ---------- LOGIN ---------- */
   const login = (userData, tokenValue) => {
-    const normalizedUser = {
-      ...userData,
-      role:
-        userData.role === "SUPER_ADMIN"
-          ? "ADMIN"
-          : userData.role,
-    };
-
     localStorage.setItem("token", tokenValue);
-    localStorage.setItem("user", JSON.stringify(normalizedUser));
+    localStorage.setItem("user", JSON.stringify(userData));
 
-    setUser(normalizedUser);
+    setUser(userData);
     setToken(tokenValue);
   };
 
@@ -87,7 +71,7 @@ const logout = async () => {
         loading,
         isAuthenticated: !!user,
         isAdmin: () =>
-          ["admin", "admin_staff"].includes(
+          ["admin", "admin_staff", "super_admin"].includes(
             user?.role?.toLowerCase()
           ),
       }}

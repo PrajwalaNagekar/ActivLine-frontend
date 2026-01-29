@@ -3,6 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../layout/MainLayout";
+// Settings - Canned Responses
+import Main from "../pages/Admin/Settings/CannedResponses/CannedResponses.jsx";
+import CategoryResponses from
+  "../pages/Admin/Settings/CannedResponses/CategoryResponses.jsx";
+import Categories from "../pages/Admin/Settings/CannedResponses/Categories.jsx";
+
+
 // import SubscriberDetailPage from "../pages/Admin/CustomerDetails";
 // import SubscribersPage from "../pages/Admin/Customers";
 const ProfilePage = lazy(() => import("../pages/profile/ProfilePage.jsx"));
@@ -116,7 +123,7 @@ const Router = () => {
           <Route
             path="admin-notifications"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN"]}>
                 
                   <AdminNotifications />
                 
@@ -149,7 +156,7 @@ const Router = () => {
           <Route
             path="dashboard"
             element={
-              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
                 
                   <DashboardPage />
                 
@@ -159,7 +166,7 @@ const Router = () => {
           {/* <Route
             path="franchise"
             element={
-              <ProtectedRoute allowedRoles={['admin']}>
+              <ProtectedRoute allowedRoles={['admin', 'SUPER_ADMIN']}>
                 <Suspense >
                   <FranchisePage />
                 
@@ -218,7 +225,7 @@ const Router = () => {
           <Route
             path="field-staff"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN"]}>
                 
                   <FieldStaffPage />
                 
@@ -262,7 +269,7 @@ const Router = () => {
           <Route
             path="payments"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN"]}>
                 
                   <Payments />
                 
@@ -272,7 +279,7 @@ const Router = () => {
           <Route
             path="staff"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN"]}>
                 
                   <Staff />
                 
@@ -282,7 +289,7 @@ const Router = () => {
           <Route
             path="reports"
             element={
-              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
                 
                   <Reports />
                 
@@ -292,7 +299,7 @@ const Router = () => {
           <Route
             path="logs"
             element={
-              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
                 
                   <Logs />
                 
@@ -302,7 +309,7 @@ const Router = () => {
           <Route
             path="plans"
             element={
-              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
                 
                   <Plans />
                 
@@ -314,7 +321,7 @@ const Router = () => {
           <Route
             path="offers"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN"]}>
                 
                   <OffersPage />
                 
@@ -326,7 +333,7 @@ const Router = () => {
           <Route
             path="tickets"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN"]}>
                 
                   <Tickets />
                 
@@ -355,21 +362,40 @@ const Router = () => {
             }
           />
           {/* Settings - accessible to both admin and franchise */}
-          <Route
-            path="settings"
-            element={
-              <ProtectedRoute allowedRoles={["admin", "staff", "admin_staff"]}>
-                
-                  <SettingsPage />
-                
-              </ProtectedRoute>
-            }
-          />
+        {/* SETTINGS */}
+<Route
+  path="settings"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
+      <SettingsPage />
+    </ProtectedRoute>
+  }
+/>
+
+{/* CANNED RESPONSES */}
+<Route
+  path="settings/canned/categories"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
+      <Categories />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="settings/canned/:categoryId"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
+      <CategoryResponses />
+    </ProtectedRoute>
+  }
+/>
+
 
           <Route
             path="profile"
             element={
-              <ProtectedRoute allowedRoles={["admin", "franchise", "staff", "admin_staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "franchise", "staff", "admin_staff"]}>
                 <ProfileSwitcher
                   franchiseUser={franchiseUser}
                   onUpdate={setFranchiseUser}

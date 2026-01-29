@@ -371,6 +371,28 @@ import {
   getTotalCustomers,
   getRecentTickets,
 } from "../../../api/admindashboard.api";
+import Lottie from "lottie-react";
+import telecomAnimation from "../../../animations/Activline-Dashboard.json";
+
+
+const DashboardHeaderAnimation = ({ isDark }) => {
+  return (
+    <div
+      className={`flex items-center justify-center rounded-xl p-2 transition-all duration-300 ${
+        isDark
+          ? "bg-gradient-to-br from-blue-500/10 to-cyan-500/10"
+          : "bg-gradient-to-br from-blue-100 to-cyan-100"
+      }`}
+    >
+      <Lottie
+        animationData={telecomAnimation}
+        loop
+        autoplay
+        className="w-20 h-20 md:w-24 md:h-24"
+      />
+    </div>
+  );
+};
 
 const DashboardPage = () => {
   const { isDark } = useTheme();
@@ -512,7 +534,7 @@ const DashboardPage = () => {
       }`}
     >
       {/* HEADER WITH ANIMATION */}
-      <div className="mb-8 animate-slideDown">
+      {/* <div className="mb-8 animate-slideDown">
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
@@ -556,7 +578,56 @@ const DashboardPage = () => {
             <span className="text-sm font-medium">Refresh</span>
           </button>
         </div>
+      </div> */}
+
+      {/* HEADER WITH LOTTIE ANIMATION */}
+<div className="mb-8 animate-slideDown">
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-4">
+      
+      {/* 🔥 LOTTIE ANIMATION */}
+      <DashboardHeaderAnimation isDark={isDark} />
+
+      {/* TITLE + SUBTITLE */}
+      <div>
+        <div className="flex items-center gap-3 mb-1">
+          <h1
+            className={`text-3xl font-bold bg-gradient-to-r ${
+              isDark
+                ? "from-blue-400 to-cyan-300"
+                : "from-blue-600 to-cyan-500"
+            } bg-clip-text text-transparent`}
+          >
+            Dashboard
+          </h1>
+        </div>
+
+        <p
+          className={`text-lg ${
+            isDark ? "text-gray-400" : "text-gray-600"
+          }`}
+        >
+          Welcome back! Here's what's happening today.
+        </p>
       </div>
+    </div>
+
+    {/* REFRESH BUTTON */}
+    <button
+      onClick={() => window.location.reload()}
+      className={`p-3 rounded-xl transition-all duration-300 hover:scale-105 flex items-center gap-2 ${
+        isDark
+          ? "bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white"
+          : "bg-white hover:bg-gray-100 text-gray-600 hover:text-gray-900 shadow-sm"
+      }`}
+      title="Refresh dashboard"
+    >
+      <RefreshCw className="h-5 w-5" />
+      <span className="text-sm font-medium">Refresh</span>
+    </button>
+  </div>
+</div>
+
 
       {/* ================= ANIMATED TOP CARDS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10">

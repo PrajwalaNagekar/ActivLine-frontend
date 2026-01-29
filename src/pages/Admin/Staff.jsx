@@ -40,10 +40,10 @@ import statsEyeAnimation from "../../animations/Profile user card.json";
 
 const getUserRole = () => {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
     if (!token) return null;
     const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.role;
+    return payload.role?.toUpperCase();
   } catch {
     return null;
   }
@@ -253,6 +253,7 @@ const Staff = () => {
   const getRoleIcon = (role) => {
     switch (role) {
       case "ADMIN":
+      case "SUPER_ADMIN":
         return <Shield className="w-4 h-4" />;
       case "ADMIN_STAFF":
         return <Users className="w-4 h-4" />;
@@ -1119,7 +1120,7 @@ const Staff = () => {
                   }`}
                     >
                       <option value="ADMIN_STAFF">ADMIN STAFF</option>
-                      {userRole === "ADMIN" && (
+                  {(userRole === "ADMIN" || userRole === "SUPER_ADMIN") && (
                         <option value="ADMIN">ADMIN</option>
                       )}
                     </select>
