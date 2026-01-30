@@ -42,10 +42,13 @@ import {
   Crown,
   Coffee,
   Rocket,
-  Feather
+  Feather,
+  X,
+  Upload
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 import EmojiPicker from "emoji-picker-react";
+import api from "../../api/axios";
 
 const Chat = ({
   ticket,
@@ -69,10 +72,12 @@ const Chat = ({
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const [showEmoji, setShowEmoji] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const fileInputRef = useRef(null);
   const [activeReactions, setActiveReactions] = useState({});
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pinnedMessages, setPinnedMessages] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
   
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [messageStats, setMessageStats] = useState({
@@ -80,6 +85,92 @@ const Chat = ({
     agent: 0,
     customer: 0
   });
+
+  const [previewUrls, setPreviewUrls] = useState([]);
+
+useEffect(() => {
+  const urls = selectedFiles.map(file => ({
+    file,
+    url: URL.createObjectURL(file)
+  }));
+
+  setPreviewUrls(urls);
+
+  // 🔥 CLEANUP (VERY IMPORTANT)
+  return () => {
+    urls.forEach(p => URL.revokeObjectURL(p.url));
+  };
+}, [selectedFiles]);
+
+
+const handleFileSelect = (e) => {
+  if (!e.target.files || e.target.files.length === 0) return;
+
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const files = Array.from(e.target.files).filter(file => {
+    if (file.size > MAX_SIZE) {
+      alert(`${file.name} is too large (max 5MB)`);
+      return false;
+    }
+    return true;
+  });
+
+  if (files.length > 0) {
+    setSelectedFiles(prev => [...prev, ...files]);
+  }
+
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
+  }
+};
+
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  }
+
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const files = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) files.push(file);
+      }
+    }
+
+    if (files.length > 0) {
+      e.preventDefault();
+      setSelectedFiles(prev => [...prev, ...files]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const files = Array.from(e.dataTransfer.files).filter(file => 
+        file.type.startsWith('image/') || file.type === 'application/pdf'
+      );
+      if (files.length > 0) {
+        setSelectedFiles(prev => [...prev, ...files]);
+      }
+    }
+  };
 
   const quickReactions = ["👍", "❤️", "😄", "🎉", "🔥", "🚀", "⭐", "👏"];
 
@@ -101,13 +192,41 @@ const Chat = ({
     });
   }, []);
 
-  const send = useCallback(() => {
-    if (!inputMsg.trim()) return;
-    onSendMessage(inputMsg);
+const send = useCallback(async () => {
+  if (!inputMsg.trim() && selectedFiles.length === 0) return;
+
+  try {
+    // 📎 IMAGE / FILE MESSAGE → API ONLY
+    if (selectedFiles.length > 0) {
+      const formData = new FormData();
+      formData.append("roomId", ticket._id);
+      formData.append("message", inputMsg || "");
+
+      selectedFiles.forEach(file => {
+        formData.append("files", file);
+      });
+
+      // ✅ upload API already emits socket
+      await api.post("/api/chat/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+    }
+    // 💬 TEXT ONLY MESSAGE → SOCKET
+    else {
+      onSendMessage({ message: inputMsg });
+    }
+
+    // ✅ RESET UI
+    setSelectedFiles([]);
     setInputMsg("");
     setShowEmoji(false);
-    setTimeout(() => inputRef.current?.focus(), 100);
-  }, [inputMsg, onSendMessage]);
+    inputRef.current?.focus();
+
+  } catch (err) {
+    console.error("❌ Message send failed", err);
+  }
+}, [inputMsg, selectedFiles, ticket?._id, onSendMessage]);
+
 
   const handleKeyPress = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -218,7 +337,11 @@ const Chat = ({
       darkMode 
         ? "bg-gradient-to-br from-gray-900 via-gray-950 to-black" 
         : "bg-gradient-to-br from-blue-50/50 via-white to-purple-50/50"
-    } relative backdrop-blur-sm`}>
+    } relative backdrop-blur-sm`}
+    onDragOver={handleDragOver}
+    onDragLeave={handleDragLeave}
+    onDrop={handleDrop}
+    >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className={`absolute top-10 left-10 w-96 h-96 rounded-full blur-3xl opacity-20 ${
           darkMode ? 'bg-blue-500/10' : 'bg-blue-400/10'
@@ -227,6 +350,16 @@ const Chat = ({
           darkMode ? 'bg-purple-500/10' : 'bg-purple-400/10'
         }`}></div>
       </div>
+
+      {isDragging && (
+        <div className="absolute inset-0 z-50 bg-blue-500/20 backdrop-blur-sm flex items-center justify-center border-2 border-blue-500 border-dashed m-4 rounded-2xl animate-pulse">
+          <div className="text-center p-10 rounded-3xl bg-gray-900/80 shadow-2xl">
+            <Upload className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+            <p className="text-blue-300 font-bold text-2xl">Drop files to attach</p>
+            <p className="text-gray-400 mt-2">Images and PDFs supported</p>
+          </div>
+        </div>
+      )}
 
       {/* HEADER - Responsive */}
       <div className={`p-4 sm:p-5 border-b flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4 relative z-20 ${
@@ -528,7 +661,9 @@ const Chat = ({
                     copyToClipboard={copyToClipboard}
                     quickReactions={quickReactions}
                   />
+                  
                 )}
+
               </React.Fragment>
             );
           }
@@ -597,6 +732,49 @@ const Chat = ({
           ? "border-gray-800/50 bg-gradient-to-t from-gray-900/95 via-gray-950/95 to-black/95 backdrop-blur-xl" 
           : "border-gray-200/50 bg-gradient-to-t from-white/95 via-blue-50/95 to-white/95 backdrop-blur-xl"
       } shadow-2xl`}>
+        {/* Preview Area */}
+        {selectedFiles.length > 0 && (
+          <div className={`-mx-4 sm:-mx-5 px-4 sm:px-5 pb-4 mb-4 border-b ${darkMode ? 'border-gray-800/50' : 'border-gray-200/50'} animate-in slide-in-from-bottom-2 duration-200`}>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+              {selectedFiles.map((file, idx) => (
+                <div
+  key={idx}
+  className={`relative flex-shrink-0 w-24 h-24 rounded-xl border overflow-hidden group/preview shadow-sm ${
+    darkMode ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-200"
+  }`}
+>
+  {previewUrls[idx]?.file.type.startsWith("image/") ? (
+    <img
+      src={previewUrls[idx].url}
+      alt="preview"
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
+      <FileText className="w-8 h-8 text-blue-500 mb-1.5" />
+      <span
+        className={`text-[10px] leading-tight line-clamp-2 w-full break-all ${
+          darkMode ? "text-gray-300" : "text-gray-600"
+        }`}
+      >
+        {previewUrls[idx]?.file.name}
+      </span>
+    </div>
+  )}
+
+  <button
+    type="button"
+    onClick={() => removeFile(idx)}
+    className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-1.5 opacity-0 group-hover/preview:opacity-100 transition-opacity hover:bg-red-500 backdrop-blur-sm"
+  >
+    <X className="w-3.5 h-3.5" />
+  </button>
+</div>
+
+              ))}
+            </div>
+          </div>
+        )}
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -614,7 +792,8 @@ const Chat = ({
                 setShowEmoji(false);
               }}
               onKeyDown={handleKeyPress}
-              placeholder="💫 Type your message..."
+              onPaste={handlePaste}
+              placeholder={selectedFiles.length > 0 ? "Add a caption..." : "💫 Type your message..."}
               rows={1}
               className={`w-full px-4 sm:px-5 pr-20 sm:pr-24 py-3 sm:py-4 rounded-xl sm:rounded-2xl border resize-none transition-all duration-500 ${
                 darkMode
@@ -627,6 +806,27 @@ const Chat = ({
                 e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
               }}
             />
+<input
+  ref={fileInputRef}
+  type="file"
+  multiple
+  accept="image/*,application/pdf"
+  hidden
+  onChange={handleFileSelect}
+/>
+
+<button
+  type="button"
+  onClick={() => fileInputRef.current.click()}
+  className={`p-2 rounded-xl transition ${
+    darkMode
+      ? "text-gray-400 hover:text-blue-400 hover:bg-gray-800"
+      : "text-gray-500 hover:text-blue-600 hover:bg-gray-100"
+  }`}
+  title="Attach files"
+>
+  <Paperclip className="w-4 h-4" />
+</button>
 
             {inputMsg.length > 0 && (
               <div className={`absolute right-14 sm:right-16 bottom-2.5 sm:bottom-3 text-xs transition-all duration-300 ${
@@ -679,9 +879,9 @@ const Chat = ({
 
           <button
             type="submit"
-            disabled={!inputMsg.trim()}
+            disabled={!inputMsg.trim() && selectedFiles.length === 0}
             className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-500 flex-shrink-0 relative group ${
-              inputMsg.trim()
+              inputMsg.trim() || selectedFiles.length > 0
                 ? darkMode
                   ? "bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-white shadow-2xl hover:shadow-blue-500/50 hover:scale-110"
                   : "bg-gradient-to-br from-blue-500 via-blue-400 to-cyan-400 text-white shadow-2xl hover:shadow-blue-500/50 hover:scale-110"
@@ -691,7 +891,7 @@ const Chat = ({
             }`}
           >
             <Send className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-500 group-hover:rotate-45" />
-            {inputMsg.trim() && (
+            {(inputMsg.trim() || selectedFiles.length > 0) && (
               <Sparkles className="absolute -top-1 -right-1 w-2 h-2 text-yellow-400" />
             )}
           </button>
@@ -776,9 +976,57 @@ const MessageBubble = ({
           </button>
         </div>
 
-        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-sm sm:text-base">
-          {msg.message}
-        </p>
+        {/* Attachments (WhatsApp Style: Images First) */}
+        {msg.attachments?.length > 0 && (
+          <div className={`grid grid-cols-1 gap-2 ${msg.message ? 'mb-2' : ''}`}>
+            {msg.attachments.map((file, idx) => (
+              <div key={idx}>
+                {file.type === "image" || file.type?.startsWith("image") ? (
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block rounded-lg overflow-hidden border hover:opacity-90 transition"
+                  >
+                    <img
+                      src={file.url}
+                      alt={file.name}
+                      className="max-w-full h-auto object-cover rounded-lg"
+                      style={{ maxHeight: "350px" }}
+                    />
+                  </a>
+                ) : (
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`flex items-center gap-3 p-3 rounded-xl border text-sm transition ${
+                      darkMode
+                        ? "bg-gray-800/50 border-gray-700 hover:bg-gray-700"
+                        : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                    }`}
+                  >
+                    <div className="p-2 bg-red-500/10 rounded-lg">
+                      <FileText className="w-5 h-5 text-red-500 flex-shrink-0" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate font-medium">{file.name}</p>
+                      <p className="text-xs opacity-70 uppercase">{file.type?.split('/')[1] || 'FILE'}</p>
+                    </div>
+                    <Download className="w-4 h-4 flex-shrink-0 opacity-70" />
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Message Text (Caption) */}
+        {msg.message && (
+          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words text-sm sm:text-base">
+            {msg.message}
+          </p>
+        )}
         
         {messageReactions.length > 0 && (
           <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-3">

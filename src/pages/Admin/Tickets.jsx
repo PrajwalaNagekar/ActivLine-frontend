@@ -216,7 +216,7 @@ const assignStaff = async (roomId, staffId) => {
     // 2️⃣ 🔥 VERY IMPORTANT: attach ADMIN token to socket
     socket.auth = { token };
 
-    if (!socket.connected) {
+    if (!socket.connected && token) {
       socket.connect();
     }
 
@@ -232,10 +232,11 @@ const assignStaff = async (roomId, staffId) => {
 
     socket.on("new-message", handleNewMessage);
 
-    return () => {
-      socket.off("new-message", handleNewMessage);
-      socket.disconnect();
-    };
+   return () => {
+  socket.off("new-message", handleNewMessage);
+  socket.emit("leave-room", activeTicket._id);
+};
+
   }, [activeTicket?._id, token]);
 
   useEffect(() => {
@@ -250,14 +251,16 @@ const assignStaff = async (roomId, staffId) => {
 }, []);
 
   /* ---------- SEND MESSAGE (ADMIN → CUSTOMER) ---------- */
-  const sendMessage = (text) => {
-    if (!text.trim() || !activeTicket) return;
+ const sendMessage = ({ message }) => {
+  if (!message || !message.trim()) return;
 
-    socket.emit("send-message", {
-      roomId: activeTicket._id,
-      message: text,
-    });
-  };
+  socket.emit("send-message", {
+    roomId: activeTicket._id,
+    message
+  });
+};
+
+
 
   /* ---------- FILTER ---------- */
   const filteredTickets = useMemo(() => {
