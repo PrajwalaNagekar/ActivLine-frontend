@@ -125,6 +125,26 @@ const handleFileSelect = (e) => {
   }
 };
 
+const downloadFile = async (file) => {
+  try {
+    const res = await fetch(file.url);
+    const blob = await res.blob();
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name; // ✅ keeps original format
+    document.body.appendChild(a);
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+    a.remove();
+  } catch (err) {
+    console.error("❌ Download failed", err);
+  }
+};
+
+
 
   const removeFile = (index) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
@@ -163,9 +183,7 @@ const handleFileSelect = (e) => {
     setIsDragging(false);
     
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const files = Array.from(e.dataTransfer.files).filter(file => 
-        file.type.startsWith('image/') || file.type === 'application/pdf'
-      );
+      const files = Array.from(e.dataTransfer.files);
       if (files.length > 0) {
         setSelectedFiles(prev => [...prev, ...files]);
       }
@@ -207,9 +225,7 @@ const send = useCallback(async () => {
       });
 
       // ✅ upload API already emits socket
-      await api.post("/api/chat/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      await api.post("/api/chat/upload", formData);
     }
     // 💬 TEXT ONLY MESSAGE → SOCKET
     else {
@@ -224,6 +240,7 @@ const send = useCallback(async () => {
 
   } catch (err) {
     console.error("❌ Message send failed", err);
+    alert("Failed to send message. Please check your connection or file size.");
   }
 }, [inputMsg, selectedFiles, ticket?._id, onSendMessage]);
 
@@ -660,6 +677,7 @@ const send = useCallback(async () => {
                     addReaction={addReaction}
                     copyToClipboard={copyToClipboard}
                     quickReactions={quickReactions}
+                    downloadFile={downloadFile}
                   />
                   
                 )}
@@ -699,6 +717,7 @@ const send = useCallback(async () => {
               addReaction={addReaction}
               copyToClipboard={copyToClipboard}
               quickReactions={quickReactions}
+              downloadFile={downloadFile}
             />
           );
         })}
@@ -933,7 +952,8 @@ const MessageBubble = ({
   togglePinMessage, 
   addReaction, 
   copyToClipboard,
-  quickReactions 
+  quickReactions,
+  downloadFile
 }) => {
   return (
     <div className={`flex ${isAgent ? "justify-end" : "justify-start"}`}>
@@ -982,25 +1002,31 @@ const MessageBubble = ({
             {msg.attachments.map((file, idx) => (
               <div key={idx}>
                 {file.type === "image" || file.type?.startsWith("image") ? (
-                  <a
-                    href={file.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block rounded-lg overflow-hidden border hover:opacity-90 transition"
-                  >
+                  <div className="relative group/image">
                     <img
                       src={file.url}
                       alt={file.name}
-                      className="max-w-full h-auto object-cover rounded-lg"
-                      style={{ maxHeight: "350px" }}
+                      className="max-w-full h-auto rounded-lg object-cover max-h-[350px] cursor-pointer hover:opacity-95 transition-opacity shadow-sm"
+                      onClick={() => downloadFile(file)}
                     />
-                  </a>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadFile(file);
+                      }}
+                      className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover/image:opacity-100 transition-opacity hover:bg-black/70 backdrop-blur-sm"
+                      title="Download"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </div>
+
                 ) : (
-                  <a
-                    href={file.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className={`flex items-center gap-3 p-3 rounded-xl border text-sm transition ${
+                  <button
+                    type="button"
+                    onClick={() => downloadFile(file)}
+                    className={`flex w-full items-center gap-3 p-3 rounded-xl border text-sm transition ${
                       darkMode
                         ? "bg-gray-800/50 border-gray-700 hover:bg-gray-700"
                         : "bg-gray-50 border-gray-200 hover:bg-gray-100"
@@ -1014,7 +1040,7 @@ const MessageBubble = ({
                       <p className="text-xs opacity-70 uppercase">{file.type?.split('/')[1] || 'FILE'}</p>
                     </div>
                     <Download className="w-4 h-4 flex-shrink-0 opacity-70" />
-                  </a>
+                  </button>
                 )}
               </div>
             ))}
