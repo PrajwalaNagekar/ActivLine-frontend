@@ -128,6 +128,7 @@ const handleFileSelect = (e) => {
 const downloadFile = async (file) => {
   try {
     const res = await fetch(file.url);
+      if (!res.ok) throw new Error(`HTTP status ${res.status}`);
     const blob = await res.blob();
 
     const url = window.URL.createObjectURL(blob);
@@ -141,6 +142,8 @@ const downloadFile = async (file) => {
     a.remove();
   } catch (err) {
     console.error("❌ Download failed", err);
+      // Fallback: Open in new tab if fetch fails (e.g. 401 Unauthorized)
+      window.open(file.url, "_blank");
   }
 };
 
@@ -211,7 +214,7 @@ const downloadFile = async (file) => {
   }, []);
 
 const send = useCallback(async () => {
-  if (!inputMsg.trim() && selectedFiles.length === 0) return;
+  if ((!inputMsg.trim() && selectedFiles.length === 0) || !ticket?._id) return;
 
   try {
     // 📎 IMAGE / FILE MESSAGE → API ONLY
@@ -226,14 +229,15 @@ const send = useCallback(async () => {
 
       // ✅ upload API already emits socket
       await api.post("/api/chat/upload", formData);
+      
+      // ✅ RESET UI ONLY ON SUCCESS
+      setSelectedFiles([]);
     }
     // 💬 TEXT ONLY MESSAGE → SOCKET
     else {
       onSendMessage({ message: inputMsg });
     }
 
-    // ✅ RESET UI
-    setSelectedFiles([]);
     setInputMsg("");
     setShowEmoji(false);
     inputRef.current?.focus();
