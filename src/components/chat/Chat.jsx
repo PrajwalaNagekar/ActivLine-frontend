@@ -49,6 +49,9 @@ import {
 import { useTheme } from "../../context/ThemeContext";
 import EmojiPicker from "emoji-picker-react";
 import api from "../../api/axios";
+// import { socket } from "../../socket/socket";
+import { socket } from "../../socket/socket";
+// import { socket } from "../../socket/socket";
 
 const Chat = ({
   ticket,
@@ -125,27 +128,29 @@ const handleFileSelect = (e) => {
   }
 };
 
-const downloadFile = async (file) => {
-  try {
-    const res = await fetch(file.url);
-      if (!res.ok) throw new Error(`HTTP status ${res.status}`);
-    const blob = await res.blob();
 
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name; // ✅ keeps original format
-    document.body.appendChild(a);
-    a.click();
-
-    window.URL.revokeObjectURL(url);
-    a.remove();
-  } catch (err) {
-    console.error("❌ Download failed", err);
-      // Fallback: Open in new tab if fetch fails (e.g. 401 Unauthorized)
-      window.open(file.url, "_blank");
-  }
+const openFile = (file) => {
+  // Always preview with ORIGINAL URL
+  window.open(file.url, "_blank");
 };
+
+const downloadFile = (file) => {
+  const downloadUrl = file.url.replace(
+    "/upload/",
+    "/upload/fl_attachment/"
+  );
+
+  const a = document.createElement("a");
+  a.href = downloadUrl;
+  a.download = file.name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+};
+
+
+
+
 
 
 
@@ -216,37 +221,31 @@ const downloadFile = async (file) => {
 const send = useCallback(async () => {
   if ((!inputMsg.trim() && selectedFiles.length === 0) || !ticket?._id) return;
 
-  try {
-    // 📎 IMAGE / FILE MESSAGE → API ONLY
-    if (selectedFiles.length > 0) {
-      const formData = new FormData();
-      formData.append("roomId", ticket._id);
-      formData.append("message", inputMsg || "");
+ // In send() function – replace the attachments mapping
+const attachments = await Promise.all(
+  selectedFiles.map(async (file) => {
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    return {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      // Send as normal array – much more reliable over socket.io
+      buffer: Array.from(uint8Array),
+    };
+  })
+);
 
-      selectedFiles.forEach(file => {
-        formData.append("files", file);
-      });
+  socket.emit("send-message", {
+    roomId: ticket._id,
+    message: inputMsg || "",
+    attachments,
+  });
 
-      // ✅ upload API already emits socket
-      await api.post("/api/chat/upload", formData);
-      
-      // ✅ RESET UI ONLY ON SUCCESS
-      setSelectedFiles([]);
-    }
-    // 💬 TEXT ONLY MESSAGE → SOCKET
-    else {
-      onSendMessage({ message: inputMsg });
-    }
-
-    setInputMsg("");
-    setShowEmoji(false);
-    inputRef.current?.focus();
-
-  } catch (err) {
-    console.error("❌ Message send failed", err);
-    alert("Failed to send message. Please check your connection or file size.");
-  }
-}, [inputMsg, selectedFiles, ticket?._id, onSendMessage]);
+  setInputMsg("");
+  setSelectedFiles([]);
+}, [inputMsg, selectedFiles, ticket?._id]);
 
 
   const handleKeyPress = useCallback((e) => {
@@ -1005,46 +1004,54 @@ const MessageBubble = ({
           <div className={`grid grid-cols-1 gap-2 ${msg.message ? 'mb-2' : ''}`}>
             {msg.attachments.map((file, idx) => (
               <div key={idx}>
-                {file.type === "image" || file.type?.startsWith("image") ? (
+                {file.type?.startsWith("image") ? (
                   <div className="relative group/image">
                     <img
                       src={file.url}
                       alt={file.name}
-                      className="max-w-full h-auto rounded-lg object-cover max-h-[350px] cursor-pointer hover:opacity-95 transition-opacity shadow-sm"
-                      onClick={() => downloadFile(file)}
+                      className="rounded-lg max-h-60 w-full object-cover cursor-pointer border border-gray-200 dark:border-gray-700"
+                      onClick={() => openFile(file)}
                     />
                     <button
-                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         downloadFile(file);
                       }}
-                      className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full opacity-0 group-hover/image:opacity-100 transition-opacity hover:bg-black/70 backdrop-blur-sm"
+                      className="absolute bottom-2 right-2 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full opacity-0 group-hover/image:opacity-100 transition-opacity backdrop-blur-sm"
                       title="Download"
                     >
                       <Download className="w-4 h-4" />
                     </button>
                   </div>
-
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => downloadFile(file)}
-                    className={`flex w-full items-center gap-3 p-3 rounded-xl border text-sm transition ${
+                  <div
+                    className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
                       darkMode
-                        ? "bg-gray-800/50 border-gray-700 hover:bg-gray-700"
-                        : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                        ? "bg-gray-800/50 border-gray-700 hover:bg-gray-800"
+                        : "bg-white border-gray-200 hover:bg-gray-50"
                     }`}
                   >
                     <div className="p-2 bg-red-500/10 rounded-lg">
                       <FileText className="w-5 h-5 text-red-500 flex-shrink-0" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate font-medium">{file.name}</p>
+                    <div className="flex-1 min-w-0 cursor-pointer" onClick={() => openFile(file)}>
+                      <p className={`text-sm font-medium truncate ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                        {file.name}
+                      </p>
                       <p className="text-xs opacity-70 uppercase">{file.type?.split('/')[1] || 'FILE'}</p>
                     </div>
-                    <Download className="w-4 h-4 flex-shrink-0 opacity-70" />
-                  </button>
+                    <button
+                      onClick={() => downloadFile(file)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        darkMode 
+                          ? "hover:bg-gray-700 text-gray-400 hover:text-white" 
+                          : "hover:bg-gray-200 text-gray-500 hover:text-gray-900"
+                      }`}
+                      title="Download"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
