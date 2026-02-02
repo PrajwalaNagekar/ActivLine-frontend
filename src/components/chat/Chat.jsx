@@ -797,127 +797,106 @@ const attachments = await Promise.all(
             </div>
           </div>
         )}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            send();
-            setShowEmoji(false);
-          }}
-          className="flex items-end gap-2 sm:gap-3"
-        >
-          <div className="flex-1 relative group">
-            <textarea
-              ref={inputRef}
-              value={inputMsg}
-              onChange={(e) => {
-                setInputMsg(e.target.value);
-                setShowEmoji(false);
-              }}
-              onKeyDown={handleKeyPress}
-              onPaste={handlePaste}
-              placeholder={selectedFiles.length > 0 ? "Add a caption..." : "💫 Type your message..."}
-              rows={1}
-              className={`w-full px-4 sm:px-5 pr-20 sm:pr-24 py-3 sm:py-4 rounded-xl sm:rounded-2xl border resize-none transition-all duration-500 ${
-                darkMode
-                  ? "bg-gradient-to-r from-gray-900/80 to-gray-950/80 border-gray-800 text-white placeholder-gray-500 focus:border-blue-500"
-                  : "bg-gradient-to-r from-white/90 to-blue-50/90 border-gray-300 text-gray-900 placeholder-gray-400 focus:border-blue-500"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500/30 shadow-lg backdrop-blur-sm`}
-              style={{ maxHeight: "120px", minHeight: "48px" }}
-              onInput={(e) => {
-                e.target.style.height = "auto";
-                e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
-              }}
-            />
-<input
-  ref={fileInputRef}
-  type="file"
-  multiple
-  accept="image/*,application/pdf"
-  hidden
-  onChange={handleFileSelect}
-/>
-
-<button
-  type="button"
-  onClick={() => fileInputRef.current.click()}
-  className={`p-2 rounded-xl transition ${
-    darkMode
-      ? "text-gray-400 hover:text-blue-400 hover:bg-gray-800"
-      : "text-gray-500 hover:text-blue-600 hover:bg-gray-100"
-  }`}
-  title="Attach files"
+       <form
+  onSubmit={(e) => {
+    e.preventDefault();
+    send();
+    setShowEmoji(false);
+  }}
+  className="flex items-end gap-3"
 >
-  <Paperclip className="w-4 h-4" />
-</button>
+  {/* INPUT WRAPPER */}
+  <div className="flex-1 relative">
+    {/* ATTACH BUTTON (LEFT INSIDE INPUT) */}
+    <button
+      type="button"
+      onClick={() => fileInputRef.current.click()}
+      className={`absolute left-3 bottom-3 p-1.5 rounded-lg transition ${
+        darkMode
+          ? "text-gray-400 hover:text-blue-400"
+          : "text-gray-500 hover:text-blue-600"
+      }`}
+    >
+      <Paperclip className="w-4 h-4" />
+    </button>
 
-            {inputMsg.length > 0 && (
-              <div className={`absolute right-14 sm:right-16 bottom-2.5 sm:bottom-3 text-xs transition-all duration-300 ${
-                inputMsg.length > 450 
-                  ? 'text-red-500' 
-                  : darkMode 
-                    ? 'text-gray-500' 
-                    : 'text-gray-400'
-              }`}>
-                <span className={`font-bold ${inputMsg.length > 450 ? 'text-red-400' : 'text-blue-500'}`}>
-                  {inputMsg.length}
-                </span>
-                /500
-              </div>
-            )}
+    {/* TEXTAREA */}
+    <textarea
+      ref={inputRef}
+      value={inputMsg}
+      onChange={(e) => setInputMsg(e.target.value)}
+      onKeyDown={handleKeyPress}
+      onPaste={handlePaste}
+      placeholder={
+        selectedFiles.length > 0
+          ? "Add a caption..."
+          : "Type your message..."
+      }
+      rows={1}
+      className={`w-full pl-12 pr-12 py-3 rounded-xl resize-none transition-all duration-300 ${
+        darkMode
+          ? "bg-gray-900 text-white placeholder-gray-500 border border-gray-800"
+          : "bg-white text-gray-900 placeholder-gray-400 border border-gray-300"
+      } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+      style={{ maxHeight: "120px", minHeight: "48px" }}
+      onInput={(e) => {
+        e.target.style.height = "auto";
+        e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
+      }}
+    />
 
-            <div className="absolute right-2.5 sm:right-3 bottom-2.5 sm:bottom-3 flex items-center gap-1">
-              <div className="relative emoji-picker-container">
-                <button
-                  type="button"
-                  onClick={() => setShowEmoji(prev => !prev)}
-                  className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all duration-500 hover:scale-125 emoji-button ${
-                    darkMode
-                      ? "text-gray-400 hover:text-yellow-400 hover:bg-gray-800/50"
-                      : "text-gray-500 hover:text-yellow-600 hover:bg-yellow-100"
-                  }`}
-                  title="Add emoji"
-                >
-                  <Smile className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                </button>
+    {/* EMOJI BUTTON (RIGHT INSIDE INPUT) */}
+    <div className="absolute right-3 bottom-3 emoji-picker-container">
+      <button
+        type="button"
+        onClick={() => setShowEmoji((p) => !p)}
+        className={`p-1.5 rounded-lg transition ${
+          darkMode
+            ? "text-gray-400 hover:text-yellow-400"
+            : "text-gray-500 hover:text-yellow-500"
+        }`}
+      >
+        <Smile className="w-4 h-4" />
+      </button>
 
-                {showEmoji && (
-                  <div className="absolute bottom-12 sm:bottom-14 right-0 z-50">
-                    <EmojiPicker
-                      onEmojiClick={onEmojiClick}
-                      theme={darkMode ? "dark" : "light"}
-                      height={300}
-                      width={280}
-                      skinTonesDisabled
-                      searchDisabled={false}
-                      previewConfig={{ showPreview: false }}
-                      lazyLoadEmojis={true}
-                      className="rounded-xl sm:rounded-2xl shadow-2xl border border-gray-700"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+      {showEmoji && (
+        <div className="absolute bottom-12 right-0 z-50">
+          <EmojiPicker
+            onEmojiClick={onEmojiClick}
+            theme={darkMode ? "dark" : "light"}
+            height={300}
+            width={280}
+            previewConfig={{ showPreview: false }}
+          />
+        </div>
+      )}
+    </div>
+  </div>
 
-          <button
-            type="submit"
-            disabled={!inputMsg.trim() && selectedFiles.length === 0}
-            className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all duration-500 flex-shrink-0 relative group ${
-              inputMsg.trim() || selectedFiles.length > 0
-                ? darkMode
-                  ? "bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 text-white shadow-2xl hover:shadow-blue-500/50 hover:scale-110"
-                  : "bg-gradient-to-br from-blue-500 via-blue-400 to-cyan-400 text-white shadow-2xl hover:shadow-blue-500/50 hover:scale-110"
-                : darkMode
-                  ? "bg-gradient-to-br from-gray-800 to-gray-900 text-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-br from-gray-200 to-gray-300 text-gray-400 cursor-not-allowed"
-            }`}
-          >
-            <Send className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-500 group-hover:rotate-45" />
-            {(inputMsg.trim() || selectedFiles.length > 0) && (
-              <Sparkles className="absolute -top-1 -right-1 w-2 h-2 text-yellow-400" />
-            )}
-          </button>
-        </form>
+  {/* SEND BUTTON */}
+  <button
+    type="submit"
+    disabled={!inputMsg.trim() && selectedFiles.length === 0}
+    className={`p-3 rounded-xl transition-all ${
+      inputMsg.trim() || selectedFiles.length > 0
+        ? "bg-blue-600 text-white hover:scale-110"
+        : "bg-gray-300 text-gray-400 cursor-not-allowed"
+    }`}
+  >
+    <Send className="w-5 h-5" />
+  </button>
+
+  {/* FILE INPUT */}
+  <input
+    ref={fileInputRef}
+    type="file"
+    multiple
+    accept="image/*,application/pdf"
+    hidden
+    onChange={handleFileSelect}
+  />
+</form>
+
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-3 sm:mt-4 text-xs gap-2 sm:gap-0">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">

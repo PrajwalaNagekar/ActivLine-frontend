@@ -379,26 +379,26 @@ const assignStaff = async (roomId, staffId) => {
               <div className={`text-center p-2 rounded-md ${
                 isDark ? 'bg-gray-800' : 'bg-gray-50'
               }`}>
-                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Total</p>
-                <p className="font-bold text-sm">{stats.total}</p>
+                <p className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Total</p>
+                <p className="font-bold text-lg">{stats.total}</p>
               </div>
               <div className={`text-center p-2 rounded-md ${
                 isDark ? 'bg-amber-500/10' : 'bg-amber-50'
               }`}>
-                <p className={`text-xs ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>Open</p>
-                <p className="font-bold text-sm">{stats.open}</p>
+                <p className={`text-base ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>Open</p>
+                <p className="font-bold text-lg">{stats.open}</p>
               </div>
               <div className={`text-center p-2 rounded-md ${
                 isDark ? 'bg-blue-500/10' : 'bg-blue-50'
               }`}>
-                <p className={`text-xs ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Assigned</p>
-                <p className="font-bold text-sm">{stats.assigned}</p>
+                <p className={`text-base ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Assigned</p>
+                <p className="font-bold text-lg">{stats.assigned}</p>
               </div>
               <div className={`text-center p-2 rounded-md ${
                 isDark ? 'bg-emerald-500/10' : 'bg-emerald-50'
               }`}>
-                <p className={`text-xs ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>Closed</p>
-                <p className="font-bold text-sm">{stats.closed}</p>
+                <p className={`text-base ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>Closed</p>
+                <p className="font-bold text-lg">{stats.closed}</p>
               </div>
             </div>
 
@@ -412,7 +412,7 @@ const assignStaff = async (roomId, staffId) => {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search tickets..."
                 className={`
-                  pl-9 pr-3 py-2 w-full rounded-md border text-sm
+                  pl-9 pr-3 py-2 w-full rounded-md border text-lg
                   transition-all duration-200
                   focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none
                   ${isDark 
@@ -457,7 +457,7 @@ const assignStaff = async (roomId, staffId) => {
 <div className="relative mt-2  filter-container">
   <button
     onClick={() => setIsFilterOpen(prev => !prev)}
-    className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition
+    className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium transition
       ${isDark
         ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
         : "bg-gray-100 text-gray-700 hover:bg-gray-200"}
@@ -488,7 +488,7 @@ const assignStaff = async (roomId, staffId) => {
           setFilterStatus(status);
           setIsFilterOpen(false);
         }}
-        className={`w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition
+        className={`w-full text-left px-3 py-2 text-base flex items-center gap-2 transition
           ${filterStatus === status
             ? isDark
               ? "bg-blue-500/20 text-blue-400"
@@ -515,13 +515,13 @@ const assignStaff = async (roomId, staffId) => {
                 <div className={`p-3 rounded-lg mb-3 ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
                   <Inbox className={`w-8 h-8 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                 </div>
-                <p className={`text-center text-sm mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                <p className={`text-center text-lg mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   {search ? 'No matching tickets found' : 'No tickets available'}
                 </p>
                 {search && (
                   <button
                     onClick={() => setSearch('')}
-                    className={`text-xs ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
+                    className={`text-base ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
                   >
                     Clear search
                   </button>
@@ -580,7 +580,7 @@ const assignStaff = async (roomId, staffId) => {
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
-                          <h3 className={`font-medium text-xs truncate ${
+                          <h3 className={`font-medium text-base truncate ${
                             activeTicketId === ticket._id
                               ? isDark ? 'text-white' : 'text-gray-900'
                               : isDark ? 'text-gray-200' : 'text-gray-900'
@@ -588,17 +588,17 @@ const assignStaff = async (roomId, staffId) => {
                             {ticket.customerName}
                           </h3>
                           {ticket.lastMessageTime && (
-                            <span className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                            <span className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                               {new Date(ticket.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           )}
                         </div>
                         
                         <div className="flex items-center gap-1.5 mb-1">
-                          <span className={`text-xs font-mono ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <span className={`text-base font-mono ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             #{ticket.ticketId}
                           </span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${getStatusColor(ticket.status, isDark)} flex items-center gap-1`}>
+                          <span className={`text-sm px-1.5 py-0.5 rounded-full ${getStatusColor(ticket.status, isDark)} flex items-center gap-1`}>
                             {getStatusIcon(ticket.status)}
                             {ticket.status}
                           </span>
@@ -606,7 +606,7 @@ const assignStaff = async (roomId, staffId) => {
 
                         {/* Last message preview */}
                         {ticket.lastMessage && (
-                          <p className={`text-xs truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                          <p className={`text-base truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                             {ticket.lastMessage}
                           </p>
                         )}
@@ -616,7 +616,7 @@ const assignStaff = async (roomId, staffId) => {
                       {ticket.unreadCount > 0 && (
                         <span className={`
                           flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center
-                          text-[10px] font-bold animate-pulse
+                          text-sm font-bold animate-pulse
                           ${isDark
                             ? 'bg-blue-500 text-white'
                             : 'bg-blue-500 text-white'
@@ -678,13 +678,13 @@ const assignStaff = async (roomId, staffId) => {
                 }`}>
                   <Sparkles className={`w-8 h-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
                 </div>
-                <h3 className={`text-lg font-bold mb-2 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                <h3 className={`text-2xl font-bold mb-2 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   Admin Support Dashboard
                 </h3>
-                <p className={`text-sm text-center mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                <p className={`text-lg text-center mb-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                   Select a ticket to start managing customer support
                 </p>
-                <div className="flex items-center justify-center gap-3 text-xs">
+                <div className="flex items-center justify-center gap-3 text-base">
                   <div className={`flex items-center gap-1 px-2 py-1 rounded ${
                     isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
                   }`}>
