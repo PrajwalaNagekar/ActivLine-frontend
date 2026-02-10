@@ -18,12 +18,15 @@ import {
 
 // Import animations
 import profileAnimation from "../../animations/Profile Avatar of Young Boy.json";
+import { useEffect } from "react";
 
 const ProfilePage = () => {
-  const { user, updateProfile } = useAuth();
+ const { user, updateProfile, fetchProfile } = useAuth();
+
   const { theme, toggleTheme, isDark } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState({ ...user });
+ const [editedUser, setEditedUser] = useState({});
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -32,15 +35,49 @@ const ProfilePage = () => {
       [name]: value
     }));
   };
+  useEffect(() => {
+  if (!user) {
+    fetchProfile();
+  }
+}, []);
 
-  const handleSave = async () => {
-    try {
-      await updateProfile(editedUser);
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Failed to update profile:", error);
-    }
-  };
+useEffect(() => {
+  if (user) {
+    setEditedUser({
+      name: user.name || "",
+      email: user.email || "",
+      bio: user.bio || "",
+      phone: user.phone || "",
+      location: user.location || "",
+      role: user.role || "",
+    });
+  }
+}, [user]);
+
+
+const handleSave = async () => {
+  try {
+    const updated = await updateProfile({
+      name: editedUser.name,
+      email: editedUser.email,
+      bio: editedUser.bio,
+      phone: editedUser.phone,
+      location: editedUser.location,
+    });
+
+    // merge backend response with existing user
+    setEditedUser(prev => ({
+      ...prev,
+      ...updated,
+    }));
+
+    setIsEditing(false);
+  } catch (error) {
+    console.error("Failed to update profile:", error);
+  }
+};
+
+
 
   const handleCancel = () => {
     setEditedUser({ ...user });
@@ -277,39 +314,7 @@ const ProfilePage = () => {
                   </p>
                 </div>
 
-                {/* Bio Section */}
-                <div className="space-y-2">
-                  <label className={`block text-sm font-medium mb-2 ${
-                    isDark ? "text-slate-300" : "text-gray-700"
-                  }`}>
-                    About Me
-                  </label>
-                  {isEditing ? (
-                    <textarea
-                      name="bio"
-                      value={editedUser.bio || ''}
-                      onChange={handleInputChange}
-                      rows="4"
-                      className={`w-full px-4 py-3 rounded-lg border outline-none transition resize-none ${
-                        isDark
-                          ? "bg-slate-700 border-slate-600 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                          : "bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                      }`}
-                      placeholder="Tell us about yourself, your interests, or anything you'd like to share..."
-                    />
-                  ) : (
-                    <div className={`px-4 py-3 rounded-lg min-h-[100px] ${
-                      isDark 
-                        ? "bg-slate-700 text-slate-300" 
-                        : "bg-gray-50 text-gray-700"
-                    }`}>
-                      <p className={`${!user?.bio ? 'italic' : ''}`}>
-                        {user?.bio || "No bio provided. Click 'Edit Profile' to add a bio."}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
+         
                 {/* Additional Fields (Optional) */}
                 {isEditing && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

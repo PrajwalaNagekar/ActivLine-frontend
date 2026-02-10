@@ -537,14 +537,14 @@
 //                                   : "text-gray-900"
 //                             }`}
 //                           >
-//                             {room.customer?.fullName || "Unknown"}
+//                             {+ room.customer?.userName || "Unknown"}
 //                           </h3>
-//                           {room.lastMessageTime && (
+//                           {+ room.lastMessageAt && (
 //                             <span
 //                               className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}
 //                             >
 //                               {new Date(
-//                                 room.lastMessageTime,
+//                                 + room.lastMessageAt,
 //                               ).toLocaleTimeString([], {
 //                                 hour: "2-digit",
 //                                 minute: "2-digit",
@@ -639,7 +639,7 @@
 //                   ticket={{
 //                     ticketId: activeRoom._id.slice(-6),
 //                     issue: activeRoom.issue || "Support",
-//                     customerName: activeRoom.customer?.fullName,
+//                     customerName: active+ room.customer?.userName,
 //                     customerEmail: activeRoom.customer?.email,
 //                     customerPhone: activeRoom.customer?.phone,
 //                     status: activeRoom.status,
@@ -705,7 +705,6 @@
 // };
 
 // export default AssignedTickets;
-
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../../context/ThemeContext";
@@ -779,8 +778,8 @@ const AssignedTickets = () => {
       const updatedRoom = await updateTicketStatus(activeRoom._id, newStatus);
       setRooms((prev) =>
         prev.map((r) =>
-          r._id === updatedRoom._id ? { ...r, status: updatedRoom.status } : r
-        )
+          r._id === updatedRoom._id ? { ...r, status: updatedRoom.status } : r,
+        ),
       );
     } catch {}
   };
@@ -869,8 +868,8 @@ const AssignedTickets = () => {
   const filteredRooms = useMemo(() => {
     let result = rooms.filter(
       (r) =>
-        r.customer?.fullName?.toLowerCase().includes(search.toLowerCase()) ||
-        r._id?.toLowerCase().includes(search.toLowerCase())
+        r.customer?.userName?.toLowerCase().includes(search.toLowerCase()) ||
+        r._id?.toLowerCase().includes(search.toLowerCase()),
     );
 
     if (statusFilter !== "all") {
@@ -930,8 +929,18 @@ const AssignedTickets = () => {
   const statusFilters = [
     { key: "all", label: "All Tickets", count: rooms.length, icon: ListFilter },
     { key: "OPEN", label: "Open", count: openCount, color: "blue" },
-    { key: "IN_PROGRESS", label: "In Progress", count: inProgressCount, color: "amber" },
-    { key: "RESOLVED", label: "Resolved", count: resolvedCount, color: "emerald" },
+    {
+      key: "IN_PROGRESS",
+      label: "In Progress",
+      count: inProgressCount,
+      color: "amber",
+    },
+    {
+      key: "RESOLVED",
+      label: "Resolved",
+      count: resolvedCount,
+      color: "emerald",
+    },
   ];
 
   if (loadingRooms) {
@@ -942,7 +951,9 @@ const AssignedTickets = () => {
             <div className="w-16 h-16 border-4 border-blue-500/30 rounded-full animate-spin border-t-blue-500"></div>
             <MessageSquare className="absolute inset-0 m-auto w-6 h-6 text-blue-500 animate-pulse" />
           </div>
-          <p className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+          <p
+            className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-700"}`}
+          >
             Loading your assigned conversations...
           </p>
         </div>
@@ -967,7 +978,11 @@ const AssignedTickets = () => {
             : "bg-white/90 backdrop-blur-md text-gray-800 hover:bg-gray-100 shadow-md"
         }`}
       >
-        {isSidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+        {isSidebarOpen ? (
+          <ChevronLeft className="w-5 h-5" />
+        ) : (
+          <ChevronRight className="w-5 h-5" />
+        )}
       </button>
 
       <div className="flex h-full">
@@ -984,12 +999,16 @@ const AssignedTickets = () => {
           {/* Sidebar Header */}
           <div className="p-5 border-b flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>
+              <h2
+                className={`text-2xl font-bold tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}
+              >
                 Assigned Chats
               </h2>
               <span
                 className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  isDark ? "bg-blue-600/20 text-blue-300" : "bg-blue-100 text-blue-700"
+                  isDark
+                    ? "bg-blue-600/20 text-blue-300"
+                    : "bg-blue-100 text-blue-700"
                 }`}
               >
                 {rooms.length}
@@ -998,7 +1017,9 @@ const AssignedTickets = () => {
 
             {/* Search */}
             <div className="relative">
-              <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`} />
+              <Search
+                className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${isDark ? "text-gray-500" : "text-gray-400"}`}
+              />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -1006,9 +1027,11 @@ const AssignedTickets = () => {
                 className={`
                   w-full pl-11 pr-10 py-3 rounded-xl border text-sm
                   focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 outline-none transition-all
-                  ${isDark
-                    ? "bg-gray-800/70 border-gray-700 text-white placeholder-gray-500"
-                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 shadow-sm"}
+                  ${
+                    isDark
+                      ? "bg-gray-800/70 border-gray-700 text-white placeholder-gray-500"
+                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500 shadow-sm"
+                  }
                 `}
               />
               {search && (
@@ -1028,18 +1051,24 @@ const AssignedTickets = () => {
                 className={`
                   w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium
                   transition-all duration-200 border
-                  ${isDark
-                    ? "bg-gray-800/70 border-gray-700 text-gray-200 hover:bg-gray-700/80"
-                    : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"}
+                  ${
+                    isDark
+                      ? "bg-gray-800/70 border-gray-700 text-gray-200 hover:bg-gray-700/80"
+                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  }
                 `}
               >
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4" />
                   <span>
-                    {statusFilter === "all" ? "All Tickets" : statusFilter.replace("_", " ")}
+                    {statusFilter === "all"
+                      ? "All Tickets"
+                      : statusFilter.replace("_", " ")}
                   </span>
                 </div>
-                <ChevronDown className={`w-4 h-4 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${isFilterOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               {isFilterOpen && (
@@ -1058,13 +1087,15 @@ const AssignedTickets = () => {
                       }}
                       className={`
                         w-full px-4 py-3 text-left flex items-center justify-between text-sm transition-colors
-                        ${statusFilter === f.key
-                          ? isDark
-                            ? "bg-blue-600/20 text-blue-300"
-                            : "bg-blue-50 text-blue-800"
-                          : isDark
-                            ? "hover:bg-gray-800/60 text-gray-300"
-                            : "hover:bg-gray-50 text-gray-700"}
+                        ${
+                          statusFilter === f.key
+                            ? isDark
+                              ? "bg-blue-600/20 text-blue-300"
+                              : "bg-blue-50 text-blue-800"
+                            : isDark
+                              ? "hover:bg-gray-800/60 text-gray-300"
+                              : "hover:bg-gray-50 text-gray-700"
+                        }
                       `}
                     >
                       <div className="flex items-center gap-2">
@@ -1085,11 +1116,19 @@ const AssignedTickets = () => {
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {filteredRooms.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6">
-                <MessageSquare className={`w-12 h-12 mb-4 ${isDark ? "text-gray-600" : "text-gray-400"}`} />
-                <p className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                  {search ? "No matching conversations" : "No assigned chats yet"}
+                <MessageSquare
+                  className={`w-12 h-12 mb-4 ${isDark ? "text-gray-600" : "text-gray-400"}`}
+                />
+                <p
+                  className={`text-lg font-medium ${isDark ? "text-gray-300" : "text-gray-600"}`}
+                >
+                  {search
+                    ? "No matching conversations"
+                    : "No assigned chats yet"}
                 </p>
-                <p className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}>
+                <p
+                  className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-500"}`}
+                >
                   New tickets will appear here automatically
                 </p>
               </div>
@@ -1103,17 +1142,21 @@ const AssignedTickets = () => {
                   }}
                   className={`
                     group relative p-4 rounded-xl cursor-pointer transition-all duration-200
-                    ${activeRoomId === room._id
-                      ? isDark
-                        ? "bg-gradient-to-r from-blue-900/40 to-blue-800/20 border border-blue-700/50 shadow-lg"
-                        : "bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 shadow-sm"
-                      : isDark
-                        ? "hover:bg-gray-800/60 border border-transparent"
-                        : "hover:bg-gray-50 border border-transparent"}
+                    ${
+                      activeRoomId === room._id
+                        ? isDark
+                          ? "bg-gradient-to-r from-blue-900/40 to-blue-800/20 border border-blue-700/50 shadow-lg"
+                          : "bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 shadow-sm"
+                        : isDark
+                          ? "hover:bg-gray-800/60 border border-transparent"
+                          : "hover:bg-gray-50 border border-transparent"
+                    }
                   `}
                 >
                   {activeRoomId === room._id && (
-                    <div className={`absolute -left-px top-0 bottom-0 w-1 rounded-r-full ${isDark ? "bg-blue-500" : "bg-blue-600"}`} />
+                    <div
+                      className={`absolute -left-px top-0 bottom-0 w-1 rounded-r-full ${isDark ? "bg-blue-500" : "bg-blue-600"}`}
+                    />
                   )}
 
                   <div className="flex items-start gap-3">
@@ -1123,20 +1166,27 @@ const AssignedTickets = () => {
                         ${activeRoomId === room._id ? "bg-blue-600" : isDark ? "bg-gray-700" : "bg-gray-300"}
                       `}
                     >
-                      {(room.customer?.fullName?.[0] || "?").toUpperCase()}
+                      {(+room.customer?.userName?.[0] || "?").toUpperCase()}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h4 className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}>
-                          {room.customer?.fullName || "Unknown Customer"}
+                        <h4
+                          className={`font-semibold truncate ${isDark ? "text-white" : "text-gray-900"}`}
+                        >
+                          {+room.customer?.userName || "Unknown Customer"}
                         </h4>
-                        {room.lastMessageTime && (
-                          <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>
-                            {new Date(room.lastMessageTime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                        {+room.lastMessageAt && (
+                          <span
+                            className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}
+                          >
+                            {new Date(+room.lastMessageAt).toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
                           </span>
                         )}
                       </div>
@@ -1146,13 +1196,17 @@ const AssignedTickets = () => {
                           {getStatusIcon(room.status)}
                           {room.status?.toLowerCase() || "open"}
                         </span>
-                        <span className={`text-xs font-mono opacity-70 ${isDark ? "text-gray-500" : "text-gray-500"}`}>
+                        <span
+                          className={`text-xs font-mono opacity-70 ${isDark ? "text-gray-500" : "text-gray-500"}`}
+                        >
                           #{room._id.slice(-6)}
                         </span>
                       </div>
 
                       {room.lastMessage && (
-                        <p className={`text-sm truncate ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                        <p
+                          className={`text-sm truncate ${isDark ? "text-gray-400" : "text-gray-600"}`}
+                        >
                           {room.lastMessage}
                         </p>
                       )}
@@ -1193,7 +1247,9 @@ const AssignedTickets = () => {
                     <div className="w-14 h-14 border-4 border-blue-500/20 rounded-full animate-spin border-t-blue-500"></div>
                     <MessageSquare className="absolute inset-0 m-auto w-6 h-6 text-blue-500 animate-pulse" />
                   </div>
-                  <p className={`${isDark ? "text-gray-300" : "text-gray-700"} font-medium`}>
+                  <p
+                    className={`${isDark ? "text-gray-300" : "text-gray-700"} font-medium`}
+                  >
                     Loading conversation...
                   </p>
                 </div>
@@ -1203,9 +1259,9 @@ const AssignedTickets = () => {
                 ticket={{
                   ticketId: activeRoom._id.slice(-6),
                   issue: activeRoom.issue || "Customer Support",
-                  customerName: activeRoom.customer?.fullName,
-                  customerEmail: activeRoom.customer?.email,
-                  customerPhone: activeRoom.customer?.phone,
+                  customerName: activeRoom.customer?.userName,
+                  customerEmail: activeRoom.customer?.emailId,
+                  customerPhone: activeRoom.customer?.phoneNumber,
                   status: activeRoom.status,
                   createdAt: activeRoom.createdAt,
                   _id: activeRoom._id,
@@ -1222,23 +1278,34 @@ const AssignedTickets = () => {
             <div className="flex-1 flex items-center justify-center p-6">
               <div
                 className={`max-w-md w-full p-8 rounded-2xl text-center space-y-6 shadow-xl ${
-                  isDark ? "bg-gray-900/80 border border-gray-800" : "bg-white/80 border border-gray-200"
+                  isDark
+                    ? "bg-gray-900/80 border border-gray-800"
+                    : "bg-white/80 border border-gray-200"
                 } backdrop-blur-xl`}
               >
-                <MessageSquare className={`w-16 h-16 mx-auto ${isDark ? "text-gray-600" : "text-gray-400"}`} />
+                <MessageSquare
+                  className={`w-16 h-16 mx-auto ${isDark ? "text-gray-600" : "text-gray-400"}`}
+                />
                 <div>
-                  <h3 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                  <h3
+                    className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+                  >
                     No Chat Selected
                   </h3>
-                  <p className={`mt-3 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
-                    Select a conversation from the sidebar to start helping customers
+                  <p
+                    className={`mt-3 ${isDark ? "text-gray-400" : "text-gray-600"}`}
+                  >
+                    Select a conversation from the sidebar to start helping
+                    customers
                   </p>
                 </div>
 
                 <div className="flex flex-wrap justify-center gap-4 pt-4">
                   <div
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                      isDark ? "bg-gray-800 text-blue-300" : "bg-blue-50 text-blue-700"
+                      isDark
+                        ? "bg-gray-800 text-blue-300"
+                        : "bg-blue-50 text-blue-700"
                     }`}
                   >
                     <div className="w-3 h-3 rounded-full bg-blue-500" />
@@ -1246,7 +1313,9 @@ const AssignedTickets = () => {
                   </div>
                   <div
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                      isDark ? "bg-gray-800 text-amber-300" : "bg-amber-50 text-amber-700"
+                      isDark
+                        ? "bg-gray-800 text-amber-300"
+                        : "bg-amber-50 text-amber-700"
                     }`}
                   >
                     <div className="w-3 h-3 rounded-full bg-amber-500" />
@@ -1254,7 +1323,9 @@ const AssignedTickets = () => {
                   </div>
                   <div
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                      isDark ? "bg-gray-800 text-emerald-300" : "bg-emerald-50 text-emerald-700"
+                      isDark
+                        ? "bg-gray-800 text-emerald-300"
+                        : "bg-emerald-50 text-emerald-700"
                     }`}
                   >
                     <div className="w-3 h-3 rounded-full bg-emerald-500" />
@@ -1270,4 +1341,4 @@ const AssignedTickets = () => {
   );
 };
 
-export default AssignedTicketsChat 
+export default AssignedTicketsChat;

@@ -47,7 +47,7 @@ import {
   Upload
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
-import EmojiPicker from "emoji-picker-react";
+// import EmojiPicker from "emoji-picker-react";
 import api from "../../api/axios";
 // import { socket } from "../../socket/socket";
 import { socket } from "../../socket/socket";
@@ -74,10 +74,10 @@ const Chat = ({
   const messagesEndRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
-  const [showEmoji, setShowEmoji] = useState(false);
+  // const [showEmoji, setShowEmoji] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const fileInputRef = useRef(null);
-  const [activeReactions, setActiveReactions] = useState({});
+  // const [activeReactions, setActiveReactions] = useState({});
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [pinnedMessages, setPinnedMessages] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -198,7 +198,7 @@ const downloadFile = (file) => {
     }
   };
 
-  const quickReactions = ["👍", "❤️", "😄", "🎉", "🔥", "🚀", "⭐", "👏"];
+  // const quickReactions = ["👍", "❤️", "😄", "🎉", "🔥", "🚀", "⭐", "👏"];
 
   useEffect(() => {
     scrollToBottom();
@@ -299,8 +299,10 @@ const attachments = await Promise.all(
     if (!dateString) return "";
     const date = new Date(dateString);
     const hours = date.getHours();
-    const emoji = hours < 12 ? "🌅" : hours < 18 ? "☀️" : "🌙";
-    return `${emoji} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    // const emoji = hours < 12 ? "🌅" : hours < 18 ? "☀️" : "🌙";
+    // return `${emoji} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
   };
 
   const formatDate = (dateString) => {
@@ -314,16 +316,16 @@ const attachments = await Promise.all(
     return date.toLocaleDateString([], options);
   };
 
-  const onEmojiClick = (emojiData) => {
-    setInputMsg(prev => prev + emojiData.emoji);
-  };
+  // const onEmojiClick = (emojiData) => {
+  //   setInputMsg(prev => prev + emojiData.emoji);
+  // };
 
-  const addReaction = (messageId, emoji) => {
-    setActiveReactions(prev => ({
-      ...prev,
-      [messageId]: [...(prev[messageId] || []), { emoji, timestamp: Date.now() }]
-    }));
-  };
+  // const addReaction = (messageId, emoji) => {
+  //   setActiveReactions(prev => ({
+  //     ...prev,
+  //     [messageId]: [...(prev[messageId] || []), { emoji, timestamp: Date.now() }]
+  //   }));
+  // };
 
   const togglePinMessage = (messageId) => {
     setPinnedMessages(prev => 
@@ -340,17 +342,6 @@ const attachments = await Promise.all(
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (showEmoji && !event.target.closest('.emoji-picker-container') && !event.target.closest('.emoji-button')) {
-        setShowEmoji(false);
-      }
-    };
-    
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [showEmoji]);
 
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-50' : 'h-full'} flex flex-col overflow-hidden transition-all duration-700 ${
@@ -630,10 +621,9 @@ const attachments = await Promise.all(
         )}
 
         {messages.map((msg, index) => {
-          const isAgent = ["ADMIN", "ADMIN_STAFF"].includes(msg.senderRole);
+          const isAgent = ["ADMIN", "ADMIN_STAFF","SUPER_ADMIN"].includes(msg.senderRole);
           const isSystem = msg.senderRole === "SYSTEM";
           const isPinned = pinnedMessages.includes(msg._id);
-          const messageReactions = activeReactions[msg._id] || [];
           const showDate = index === 0 || 
             new Date(msg.createdAt).toDateString() !== 
             new Date(messages[index - 1]?.createdAt).toDateString();
@@ -673,13 +663,10 @@ const attachments = await Promise.all(
                     msg={msg}
                     isAgent={isAgent}
                     isPinned={isPinned}
-                    messageReactions={messageReactions}
                     darkMode={darkMode}
                     formatTime={formatTime}
                     togglePinMessage={togglePinMessage}
-                    addReaction={addReaction}
                     copyToClipboard={copyToClipboard}
-                    quickReactions={quickReactions}
                     downloadFile={downloadFile}
                   />
                   
@@ -713,13 +700,10 @@ const attachments = await Promise.all(
               msg={msg}
               isAgent={isAgent}
               isPinned={isPinned}
-              messageReactions={messageReactions}
               darkMode={darkMode}
               formatTime={formatTime}
               togglePinMessage={togglePinMessage}
-              addReaction={addReaction}
               copyToClipboard={copyToClipboard}
-              quickReactions={quickReactions}
               downloadFile={downloadFile}
             />
           );
@@ -801,7 +785,6 @@ const attachments = await Promise.all(
   onSubmit={(e) => {
     e.preventDefault();
     send();
-    setShowEmoji(false);
   }}
   className="flex items-end gap-3"
 >
@@ -846,31 +829,7 @@ const attachments = await Promise.all(
     />
 
     {/* EMOJI BUTTON (RIGHT INSIDE INPUT) */}
-    <div className="absolute right-3 bottom-3 emoji-picker-container">
-      <button
-        type="button"
-        onClick={() => setShowEmoji((p) => !p)}
-        className={`p-1.5 rounded-lg transition ${
-          darkMode
-            ? "text-gray-400 hover:text-yellow-400"
-            : "text-gray-500 hover:text-yellow-500"
-        }`}
-      >
-        <Smile className="w-4 h-4" />
-      </button>
-
-      {showEmoji && (
-        <div className="absolute bottom-12 right-0 z-50">
-          <EmojiPicker
-            onEmojiClick={onEmojiClick}
-            theme={darkMode ? "dark" : "light"}
-            height={300}
-            width={280}
-            previewConfig={{ showPreview: false }}
-          />
-        </div>
-      )}
-    </div>
+   
   </div>
 
   {/* SEND BUTTON */}
@@ -928,13 +887,10 @@ const MessageBubble = ({
   msg, 
   isAgent, 
   isPinned, 
-  messageReactions, 
   darkMode, 
   formatTime, 
   togglePinMessage, 
-  addReaction, 
   copyToClipboard,
-  quickReactions,
   downloadFile
 }) => {
   return (
@@ -1044,7 +1000,7 @@ const MessageBubble = ({
           </p>
         )}
         
-        {messageReactions.length > 0 && (
+        {/* {messageReactions.length > 0 && (
           <div className="flex flex-wrap gap-1 sm:gap-1.5 mt-2 sm:mt-3">
             {messageReactions.map((reaction, idx) => (
               <span key={idx} className={`text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full transition-all duration-300 hover:scale-110 ${
@@ -1054,7 +1010,7 @@ const MessageBubble = ({
               </span>
             ))}
           </div>
-        )}
+        )} */}
 
         <div className={`text-xs mt-3 sm:mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-3 ${
           isAgent 
@@ -1073,17 +1029,6 @@ const MessageBubble = ({
           </div>
           
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-500">
-            {quickReactions.slice(0, 4).map((emoji, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => addReaction(msg._id, emoji)}
-                className="text-xs px-1 sm:px-1.5 py-0.5 sm:py-1 rounded-lg transition-all duration-300 hover:scale-125 hover:bg-white/10"
-                title={`React with ${emoji}`}
-              >
-                {emoji}
-              </button>
-            ))}
           </div>
         </div>
       </div>

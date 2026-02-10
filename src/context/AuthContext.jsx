@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { logoutApi } from "../api/auth.api";
+import api from "../api/axios";
 const AuthContext = createContext(null);
 
 export const useAuth = () => {
@@ -60,6 +61,23 @@ const logout = async () => {
   }
 };
 
+  /* ---------- PROFILE ---------- */
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get("/api/auth/me");
+      setUser(res.data.data);
+      localStorage.setItem("user", JSON.stringify(res.data.data));
+    } catch (err) {
+      console.error("Failed to fetch profile", err);
+    }
+  };
+
+  const updateProfile = async (data) => {
+    const res = await api.put("/api/auth/edit", data);
+    setUser(res.data.data);
+    localStorage.setItem("user", JSON.stringify(res.data.data));
+    return res.data.data;
+  };
 
   return (
     <AuthContext.Provider
@@ -70,6 +88,8 @@ const logout = async () => {
         logout,
         loading,
         isAuthenticated: !!user,
+        fetchProfile,
+        updateProfile,
         isAdmin: () =>
           ["admin", "admin_staff", "super_admin"].includes(
             user?.role?.toLowerCase()

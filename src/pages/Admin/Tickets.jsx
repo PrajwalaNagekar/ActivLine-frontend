@@ -106,17 +106,23 @@ const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     api.get("api/chat/admin/rooms")
       .then(res => {
-        const mapped = res.data.data.map(r => ({
-          _id: r._id,
-          ticketId: r._id.slice(-6).toUpperCase(),
-          issue: "Customer Support Chat",
-          customerName: r.customer?.fullName || "Guest User",
-          status: r.status || "OPEN",
-          assignedTo: r.assignedStaff?._id || null,
-          lastMessage: r.lastMessage?.content || "No messages yet",
-          lastMessageTime: r.lastMessage?.createdAt,
-          unreadCount: r.unreadCount || 0,
-        }));
+     const mapped = res.data.data.map(r => ({
+  _id: r._id,
+  ticketId: r._id.slice(-6).toUpperCase(), // short readable ID
+  issue: "Customer Support Chat",
+
+  // ✅ FIXED
+  customerName: r.customer?.userName || "Guest User",
+
+  status: r.status || "OPEN",
+  assignedTo: r.assignedStaff?._id || null,
+
+  // ✅ FIXED
+  lastMessage: r.lastMessage || "No messages yet",
+  lastMessageTime: r.lastMessageAt,
+
+  unreadCount: r.unreadCount || 0,
+}));
 
         setTickets(mapped);
 
