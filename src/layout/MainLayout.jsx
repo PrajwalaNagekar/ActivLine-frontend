@@ -1184,6 +1184,8 @@ import {
   franchiseSidebarItems,
   staffSidebarItems,
 } from "../config/Sidebar.config";
+import { getStaffUnreadCount } from "../api/staffnotification.api";
+import { getUnreadCountApi } from "../api/notification.api";
 
 const MainLayout = () => {
   const navigate = useNavigate();
@@ -1196,7 +1198,7 @@ const MainLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [notificationCount] = useState(3); // Mock notification count
+  const [notificationCount, setNotificationCount] = useState(0);
 
   /* ---------------- EFFECTS ---------------- */
   useEffect(() => {
@@ -1213,6 +1215,31 @@ const MainLayout = () => {
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      if (!user) return;
+      const role = user.role?.toLowerCase();
+
+      try {
+        if (["staff", "admin_staff"].includes(role)) {
+          const count = await getStaffUnreadCount();
+          setNotificationCount(count);
+        } else if (["admin", "super_admin"].includes(role)) {
+          const count = await getUnreadCountApi();
+          setNotificationCount(count);
+        }
+      } catch (error) {
+        console.error("Failed to fetch notification count", error);
+        setNotificationCount(0);
+      }
+    };
+
+    fetchCount();
+    const interval = setInterval(fetchCount, 60000); // Refresh every minute
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   /* ---------------- HELPERS ---------------- */
   const handleLogout = async () => {

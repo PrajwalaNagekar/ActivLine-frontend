@@ -1,18 +1,27 @@
-
+ import { adminLogin } from "../api/auth.api";
+import toast from "react-hot-toast";
 const LoginView = ({ onLogin }) => {
   const [email, setEmail] = useState('admin@activline.in');
   const [password, setPassword] = useState('password');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      onLogin();
-    }, 1000);
-  };
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+
+  try {
+    await adminLogin({ email, password });
+    toast.success("Login successful");
+    onLogin();
+  } catch (err) {
+    toast.error(err.message || "Login failed");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950 font-sans text-slate-100 p-4">
