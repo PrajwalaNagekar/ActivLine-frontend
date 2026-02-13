@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Mail, Phone, MapPin, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useEffect } from "react";
+import { getSingleCustomer } from "../../api/customer.api";
 
 const CustomerDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark } = useTheme();
   // Renamed variable from subscriber to customer as requested
-  const customer = location.state?.customer || location.state?.subscriber; // Fallback for backward compatibility
+  // const customer = location.state?.customer || location.state?.subscriber; // Fallback for backward compatibility
+  const [customer, setCustomer] = useState(null);
+  const { id } = useParams();
 
   const [notes, setNotes] = useState('');       
 
@@ -17,6 +21,18 @@ const CustomerDetails = () => {
     { id: 1, date: '2025-11-18', description: 'ActivLine Home 200 (Renewal)', amount: '₹999.00', status: 'Paid' },
     { id: 2, date: '2025-10-18', description: 'ActivLine Home 200 (Renewal)', amount: '₹999.00', status: 'Paid' },
   ];
+useEffect(() => {
+  if (id) fetchCustomer();
+}, [id]);
+
+const fetchCustomer = async () => {
+  try {
+    const res = await getSingleCustomer(id);
+    setCustomer(res.data.data);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const supportTickets = [
     { id: '#7890', date: '3h ago', subject: 'Internet connection dropping', status: 'In Progress' },
@@ -55,9 +71,9 @@ const CustomerDetails = () => {
 
         <div className="flex justify-between items-center">
           <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {customer.name}
+            {customer.firstName} {customer.lastName}
           </h1>
-          <span className={`px-4 py-1.5 rounded-full text-sm font-medium ${customer.status === 'Active'
+          <span className={`px-4 py-1.5 rounded-full text-sm font-medium ${customer.status?.toUpperCase() === 'ACTIVE'
             ? 'bg-green-500/10 text-green-500'
             : 'bg-red-500/10 text-red-500'
             }`}>
@@ -77,19 +93,28 @@ const CustomerDetails = () => {
               <div className="flex items-start gap-3">
                 <Mail className={`w-5 h-5 mt-0.5 ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
                 <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                  {customer.email || 'sathya.kumar@example.com'}
+                  {customer.emailId || 'N/A'}
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className={`w-5 h-5 ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
                 <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                  {customer.phone || '555-1234'}
+                  {customer.phoneNumber || 'N/A'}
                 </span>
               </div>
               <div className="flex items-start gap-3">
                 <MapPin className={`w-5 h-5 mt-0.5 ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
                 <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                  {customer.address || '123 Main St, Anytown, USA'}
+                  {customer.installationAddress
+                    ? [
+                        customer.installationAddress.line2,
+                        customer.installationAddress.city,
+                        customer.installationAddress.state,
+                        customer.installationAddress.country,
+                      ]
+                        .filter(Boolean)
+                        .join(', ') + (customer.installationAddress.pin ? ` - ${customer.installationAddress.pin}` : '')
+                    : ''}
                 </span>
               </div>
             </div>
@@ -100,10 +125,10 @@ const CustomerDetails = () => {
             <h3 className={`text-lg font-semibold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>Current Plan</h3>
             <div className="mb-6">
               <p className={`text-lg font-bold mb-1 ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
-                {customer.planName || 'ActivLine Home 200'}
+                {customer.userType || 'ActivLine Home 200'}
               </p>
               <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                Device/Modem ID: {customer.deviceId || 'M-XYZ-789'}
+                Username: {customer.userName || 'N/A'}
               </p>
             </div>
             <button className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20">

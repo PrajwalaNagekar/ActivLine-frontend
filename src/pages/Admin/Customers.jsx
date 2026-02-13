@@ -1,63 +1,138 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Filter, Plus, XCircle, ChevronDown, ChevronLeft, ChevronRight, Edit, Eye } from 'lucide-react';
-import { INITIAL_SUBSCRIBERS_DATA } from '../../data';
+import { useEffect } from "react";
+import { getCustomers } from "../../api/customer.api";
 import { useTheme } from '../../context/ThemeContext';
+import api from "../../api/axios";
 
 const SubscribersPage = () => {
   const navigate = useNavigate();
   const { isDark } = useTheme();
-  const [subscribers, setSubscribers] = useState(INITIAL_SUBSCRIBERS_DATA);
+  const [subscribers, setSubscribers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedSubscriber, setSelectedSubscriber] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const [newSubscriber, setNewSubscriber] = useState({
-    name: '',
-    mobile: '',
-    email: '',
-    location: '',
-    plan: 'GigaStream 300'
+    userGroupId: '',
+    accountId: '',
+    userName: '',
+    password: '',
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    emailId: '',
+    userType: 'business',
+    activationDate: 'now',
+    customActivationDate: '',
+    customExpirationDate: '',
+    installation_address_line2: '',
+    installation_address_city: '',
+    installation_address_pin: '',
+    installation_address_state: '',
+    installation_address_country: 'IN',
+    caf_num: '',
+    createBilling: true,
+    notifyUserSms: true,
+    // Files are handled separately in state or just appended to FormData
   });
   const [editSubscriber, setEditSubscriber] = useState({
-    name: '',
-    mobile: '',
-    email: '',
-    location: '',
-    plan: 'GigaStream 300',
-    status: 'Active'
+    userGroupId: '',
+    accountId: '',
+    userName: '',
+    firstName: '',
+    lastName: '',
+    phoneNumber: '',
+    emailId: '',
+    userType: 'business',
+    activationDate: 'now',
+    customActivationDate: '',
+    customExpirationDate: '',
+    installation_address_line2: '',
+    installation_address_city: '',
+    installation_address_pin: '',
+    installation_address_state: '',
+    installation_address_country: 'IN',
+    caf_num: '',
+    createBilling: true,
+    notifyUserSms: true,
+    status: 'Active',
+  });
+
+  // Separate state for files
+  const [files, setFiles] = useState({
+    idFile: null,
+    addressFile: null,
+    cafFile: null,
+    reportFile: null,
+    signFile: null,
+    profilePicFile: null
   });
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setNewSubscriber(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
-  const handleAddSubscriber = () => {
-    const newId = `ACT-${Math.floor(1000 + Math.random() * 9000)}`;
-    const subscriberToAdd = {
-      id: newId,
-      name: newSubscriber.name || 'New User',
-      location: newSubscriber.location || 'Bangalore',
-      plan: newSubscriber.plan,
-      tech: 'Fiber To The Home',
-      status: 'Active',
-      due: '₹0'
-    };
-    setSubscribers([subscriberToAdd, ...subscribers]);
-    setIsModalOpen(false);
-    setNewSubscriber({
-      name: '',
-      mobile: '',
-      email: '',
-      location: '',
-      plan: 'GigaStream 300'
+  const handleFileChange = (e) => {
+    const { name, files: fileList } = e.target;
+    if (fileList.length > 0) {
+      setFiles(prev => ({
+        ...prev,
+        [name]: fileList[0]
+      }));
+    }
+  };
+
+  const handleAddSubscriber = async () => {
+    const formData = new FormData();
+
+    // Append text fields
+    Object.keys(newSubscriber).forEach(key => {
+      if (key === 'createBilling' || key === 'notifyUserSms') {
+        formData.append(key, newSubscriber[key] ? 'on' : 'off');
+      } else {
+        formData.append(key, newSubscriber[key]);
+      }
     });
+
+    // Append files
+    Object.keys(files).forEach(key => {
+      if (files[key]) {
+        formData.append(key, files[key]);
+      }
+    });
+
+    try {
+      const res = await api.post('/api/customer/create', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data.success) {
+        setIsModalOpen(false);
+        fetchCustomers(currentPage, itemsPerPage);
+        // Reset form
+        setNewSubscriber({
+          userGroupId: '', accountId: '', userName: '', password: '', firstName: '', lastName: '',
+          phoneNumber: '', emailId: '', userType: 'business', activationDate: 'now',
+          customActivationDate: '', customExpirationDate: '', installation_address_line2: '',
+          installation_address_city: '', installation_address_pin: '', installation_address_state: '',
+          installation_address_country: 'IN', caf_num: '', createBilling: true, notifyUserSms: true
+        });
+        setFiles({ idFile: null, addressFile: null, cafFile: null, reportFile: null, signFile: null, profilePicFile: null });
+      }
+    } catch (err) {
+      console.error("Failed to create customer", err);
+      alert("Failed to create customer: " + (err.response?.data?.message || err.message));
+    }
   };
 
   const handleViewDetail = (subscriber) => {
@@ -68,12 +143,26 @@ const SubscribersPage = () => {
     e.stopPropagation();
     setSelectedSubscriber(subscriber);
     setEditSubscriber({
-      name: subscriber.name,
-      mobile: subscriber.mobile || '+91 9876543210',
-      email: subscriber.email || `${subscriber.name.toLowerCase().replace(' ', '.')}@example.com`,
-      location: subscriber.location,
-      plan: subscriber.plan,
-      status: subscriber.status
+      userGroupId: subscriber.userGroupId || '',
+      accountId: subscriber.accountId || '',
+      userName: subscriber.userName || '',
+      firstName: subscriber.firstName || '',
+      lastName: subscriber.lastName || '',
+      phoneNumber: subscriber.phoneNumber || '',
+      emailId: subscriber.emailId || '',
+      userType: subscriber.userType || 'business',
+      activationDate: subscriber.activationDate || 'now',
+      customActivationDate: subscriber.customActivationDate || '',
+      customExpirationDate: subscriber.customExpirationDate || '',
+      installation_address_line2: subscriber.installationAddress?.line2 || '',
+      installation_address_city: subscriber.installationAddress?.city || '',
+      installation_address_pin: subscriber.installationAddress?.pin || '',
+      installation_address_state: subscriber.installationAddress?.state || '',
+      installation_address_country: subscriber.installationAddress?.country || 'IN',
+      caf_num: subscriber.cafNum || '',
+      createBilling: subscriber.createBilling === 'on' || subscriber.createBilling === true,
+      notifyUserSms: subscriber.notifyUserSms === 'on' || subscriber.notifyUserSms === true,
+      status: subscriber.status || 'Active'
     });
     setIsEditModalOpen(true);
   };
@@ -85,7 +174,6 @@ const SubscribersPage = () => {
   // };
   const handleViewClick = (subscriber, e) => {
     e.stopPropagation(); // prevents row click issues (important in tables)
-    console.log("debug");
 
     navigate(`/customer-details/${subscriber.id}`, {
       state: { subscriber }
@@ -93,54 +181,84 @@ const SubscribersPage = () => {
   };
 
   const handleEditInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setEditSubscriber(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
-  const handleUpdateSubscriber = () => {
-    if (!selectedSubscriber || !editSubscriber.name) return;
+  const handleUpdateSubscriber = async () => {
+    if (!selectedSubscriber) return;
 
-    setSubscribers(subscribers.map(sub =>
-      sub.id === selectedSubscriber.id
-        ? {
-          ...sub,
-          name: editSubscriber.name,
-          location: editSubscriber.location,
-          plan: editSubscriber.plan,
-          status: editSubscriber.status
-        }
-        : sub
-    ));
-    setIsEditModalOpen(false);
-    setSelectedSubscriber(null);
-    setEditSubscriber({
-      name: '',
-      mobile: '',
-      email: '',
-      location: '',
-      plan: 'GigaStream 300',
-      status: 'Active'
-    });
+    try {
+      const payload = { ...editSubscriber };
+      // Convert booleans to 'on'/'off' if backend expects it
+      payload.createBilling = payload.createBilling ? 'on' : 'off';
+      payload.notifyUserSms = payload.notifyUserSms ? 'on' : 'off';
+
+      const res = await api.postForm(`/api/customer/update/${selectedSubscriber.id}`, payload);
+      
+      if (res.data.success) {
+        setIsEditModalOpen(false);
+        fetchCustomers(currentPage, itemsPerPage);
+        setSelectedSubscriber(null);
+      } else {
+        alert("Failed to update customer");
+      }
+    } catch (err) {
+      console.error("Update failed", err);
+      alert("Update failed: " + (err.response?.data?.message || err.message));
+    }
   };
+useEffect(() => {
+  fetchCustomers(currentPage, itemsPerPage);
+}, [currentPage, itemsPerPage]);
+
+const fetchCustomers = async (page, limit) => {
+  try {
+    setLoading(true);
+
+    const res = await getCustomers(page, limit);
+    setTotalItems(res.data.total || 0);
+
+    const customers = res.data.data;
+
+    // 🔥 Map backend → UI format
+    const formatted = customers.map(c => ({
+      ...c, // Preserve original data for editing
+      id: c._id,
+      name: `${c.firstName || ""} ${c.lastName || ""}`,
+      mobile: c.phoneNumber,
+      email: c.emailId,
+      location: c.address?.city || "N/A",
+      plan: c.userType || "Plan N/A",
+      tech: "Fiber",
+      status: c.status || "Active",
+    }));
+
+    setSubscribers(formatted);
+  } catch (err) {
+    console.error("Failed to fetch customers", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Pagination calculations
   const paginationData = useMemo(() => {
-    const totalPages = Math.ceil(subscribers.length / itemsPerPage);
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedSubscribers = subscribers.slice(startIndex, endIndex);
+    const endIndex = startIndex + subscribers.length;
 
     return {
-      paginatedSubscribers,
-      totalPages,
-      totalItems: subscribers.length,
-      startIndex: startIndex + 1,
-      endIndex: Math.min(endIndex, subscribers.length)
+      paginatedSubscribers: subscribers,
+      totalPages: totalPages > 0 ? totalPages : 1,
+      totalItems: totalItems,
+      startIndex: totalItems > 0 ? startIndex + 1 : 0,
+      endIndex: endIndex
     };
-  }, [subscribers, currentPage, itemsPerPage]);
+  }, [subscribers, currentPage, itemsPerPage, totalItems]);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -182,13 +300,10 @@ const SubscribersPage = () => {
               <table className="w-full text-left">
                 <thead>
                   <tr className={`${isDark ? 'bg-slate-800/50 border-b border-slate-800' : 'bg-gray-50 border-b border-gray-200'}`}>
-                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer ID</th>
-                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer Name</th>
-                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer Email</th>
-
+                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer</th>
+                    <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Contact</th>
                     <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Plan Info</th>
                     <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</th>
-                    {/* <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Due Amount</th> */}
                     <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider text-right ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Actions</th>
                   </tr>
                 </thead>
@@ -207,16 +322,13 @@ const SubscribersPage = () => {
                             <div className="min-w-0">
 
                               <div className={`font-semibold text-sm truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>{sub.name}</div>
-                              <div className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>{sub.id} • {sub.location}</div>
+                              <div className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>{sub.id}</div>
                             </div>
                           </div>
                         </td>
                         <td className="py-5 px-6">
-                          <div className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.plan}</div>
-                        </td>
-
-                        <td className="py-5 px-6">
-                          <div className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.plan}</div>
+                          <div className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.mobile || 'N/A'}</div>
+                          <div className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>{sub.email || 'N/A'}</div>
                         </td>
                         <td className="py-5 px-6">
                           <div className={`text-sm font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.plan}</div>
@@ -233,7 +345,6 @@ const SubscribersPage = () => {
                             {sub.status}
                           </span>
                         </td>
-                        {/* <td className={`py-5 px-6 font-semibold text-sm ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.due}</td> */}
                         <td className="py-5 px-6">
                           <div className="flex items-center justify-end gap-2">
                             <button
@@ -246,7 +357,7 @@ const SubscribersPage = () => {
                             <button
                               onClick={(e) => handleEditClick(sub, e)}
                               className={`p-2 rounded-lg transition-all ${isDark ? 'hover:bg-slate-800 text-slate-400 hover:text-green-400' : 'hover:bg-gray-100 text-gray-400 hover:text-green-600'}`}
-                              title="Edit Subscriber"
+                              title="Edit Customer"
                             >
                               <Edit className="w-4 h-4" />
                             </button>
@@ -364,47 +475,142 @@ const SubscribersPage = () => {
       {/* Add Subscriber Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className={`rounded-xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in duration-200 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+          <div className={`rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
             <div className={`p-4 border-b flex justify-between items-center rounded-t-xl ${isDark ? 'border-slate-800 bg-slate-900' : 'border-gray-200 bg-white'}`}>
-              <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Add New Subscriber</h3>
+              <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Add New Customer</h3>
               <button onClick={() => setIsModalOpen(false)} className={`transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}><XCircle className="w-5 h-5" /></button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Full Name</label>
-                  <input type="text" name="name" value={newSubscriber.name} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`} placeholder="Enter customer name" />
+              {/* Account Info */}
+              <h4 className={`text-sm font-bold uppercase ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Account Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>User Group ID</label>
+                  <input type="number" name="userGroupId" value={newSubscriber.userGroupId} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Mobile Number</label>
-                  <input type="tel" name="mobile" value={newSubscriber.mobile} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`} placeholder="+91" />
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Account ID</label>
+                  <input type="text" name="accountId" value={newSubscriber.accountId} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Email</label>
-                  <input type="email" name="email" value={newSubscriber.email} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`} placeholder="user@example.com" />
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Username</label>
+                  <input type="text" name="userName" value={newSubscriber.userName} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
                 </div>
-                <div className="col-span-2">
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Installation Address / Area</label>
-                  <input type="text" name="location" value={newSubscriber.location} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`} placeholder="e.g. Indiranagar, Bangalore" />
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Password</label>
+                  <input type="password" name="password" value={newSubscriber.password} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
                 </div>
+              </div>
+
+              {/* Personal Info */}
+              <h4 className={`text-sm font-bold uppercase mt-4 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Personal Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>First Name</label>
+                  <input type="text" name="firstName" value={newSubscriber.firstName} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Last Name</label>
+                  <input type="text" name="lastName" value={newSubscriber.lastName} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Phone Number</label>
+                  <input type="tel" name="phoneNumber" value={newSubscriber.phoneNumber} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Email ID</label>
+                  <input type="email" name="emailId" value={newSubscriber.emailId} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+              </div>
+
+              {/* Service Info */}
+              <h4 className={`text-sm font-bold uppercase mt-4 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Service Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>User Type</label>
+                  <select name="userType" value={newSubscriber.userType} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}>
+                    <option value="business">Business</option>
+                    <option value="home">Home</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>CAF Number</label>
+                  <input type="text" name="caf_num" value={newSubscriber.caf_num} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Activation Date</label>
+                  <select name="activationDate" value={newSubscriber.activationDate} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}>
+                    <option value="now">Now</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+                {newSubscriber.activationDate === 'custom' && (
+                  <>
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Custom Activation</label>
+                      <input type="datetime-local" name="customActivationDate" value={newSubscriber.customActivationDate} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                    </div>
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Custom Expiration</label>
+                      <input type="datetime-local" name="customExpirationDate" value={newSubscriber.customExpirationDate} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Address */}
+              <h4 className={`text-sm font-bold uppercase mt-4 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Installation Address</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Select Plan</label>
-                  <div className="relative">
-                    <select name="plan" value={newSubscriber.plan} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 appearance-none ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}>
-                      <option>Basic 50 (50 Mbps)</option>
-                      <option>Basic 100 (100 Mbps)</option>
-                      <option>GigaStream 300 (300 Mbps)</option>
-                      <option>Fiber Stream 500 (500 Mbps)</option>
-                      <option>Business 1Gbps (1 Gbps)</option>
-                    </select>
-                    <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Address Line 2</label>
+                  <input type="text" name="installation_address_line2" value={newSubscriber.installation_address_line2} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} placeholder="Floor, Building, Street" />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>City</label>
+                  <input type="text" name="installation_address_city" value={newSubscriber.installation_address_city} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>State</label>
+                  <input type="text" name="installation_address_state" value={newSubscriber.installation_address_state} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Pin Code</label>
+                  <input type="text" name="installation_address_pin" value={newSubscriber.installation_address_pin} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Country</label>
+                  <input type="text" name="installation_address_country" value={newSubscriber.installation_address_country} onChange={handleInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+              </div>
+
+              {/* Settings */}
+              <div className="flex gap-6 mt-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" name="createBilling" checked={newSubscriber.createBilling} onChange={handleInputChange} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Create Billing</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" name="notifyUserSms" checked={newSubscriber.notifyUserSms} onChange={handleInputChange} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Notify User via SMS</span>
+                </label>
+              </div>
+
+              {/* Documents */}
+              <h4 className={`text-sm font-bold uppercase mt-4 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Documents Upload</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {['idFile', 'addressFile', 'cafFile', 'reportFile', 'signFile', 'profilePicFile'].map((fileKey) => (
+                  <div key={fileKey}>
+                    <label className={`block text-sm font-medium mb-1 capitalize ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                      {fileKey.replace('File', '').replace(/([A-Z])/g, ' $1')}
+                    </label>
+                    <input type="file" name={fileKey} onChange={handleFileChange} className={`w-full text-sm ${isDark ? 'text-slate-400 file:bg-slate-800 file:text-slate-300' : 'text-gray-600 file:bg-gray-100 file:text-gray-700'} file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:font-semibold hover:file:bg-blue-100 transition-all`} />
                   </div>
-                </div>
+                ))}
               </div>
             </div>
             <div className={`p-4 border-t flex gap-3 justify-end rounded-b-xl ${isDark ? 'border-slate-800 bg-slate-900' : 'border-gray-200 bg-white'}`}>
               <button onClick={() => setIsModalOpen(false)} className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-gray-700 hover:bg-gray-100'}`}>Cancel</button>
-              <button onClick={handleAddSubscriber} disabled={!newSubscriber.name} className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all">Create Account</button>
+              <button onClick={handleAddSubscriber} disabled={!newSubscriber.firstName || !newSubscriber.phoneNumber} className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all">Create Account</button>
             </div>
           </div>
         </div>
@@ -413,62 +619,133 @@ const SubscribersPage = () => {
       {/* Edit Subscriber Modal */}
       {isEditModalOpen && selectedSubscriber && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className={`rounded-xl shadow-2xl w-full max-w-lg animate-in fade-in zoom-in duration-200 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+          <div className={`rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200 border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
             <div className={`p-4 border-b flex justify-between items-center rounded-t-xl ${isDark ? 'border-slate-800 bg-slate-900' : 'border-gray-200 bg-white'}`}>
-              <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Edit Subscriber</h3>
+              <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Edit Customer</h3>
               <button onClick={() => setIsEditModalOpen(false)} className={`transition-colors ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}><XCircle className="w-5 h-5" /></button>
             </div>
             <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Subscriber ID</label>
-                  <input type="text" value={selectedSubscriber.id} disabled className={`w-full p-2.5 border rounded-lg text-sm outline-none ${isDark ? 'bg-slate-800/50 border-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed'}`} />
-                </div>
-                <div className="col-span-2">
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Full Name</label>
-                  <input type="text" name="name" value={editSubscriber.name} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`} placeholder="Enter customer name" />
+              {/* Account Info */}
+              <h4 className={`text-sm font-bold uppercase ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Account Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>User Group ID</label>
+                  <input type="number" name="userGroupId" value={editSubscriber.userGroupId} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Mobile Number</label>
-                  <input type="tel" name="mobile" value={editSubscriber.mobile} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`} placeholder="+91" />
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Account ID</label>
+                  <input type="text" name="accountId" value={editSubscriber.accountId} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Email</label>
-                  <input type="email" name="email" value={editSubscriber.email} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`} placeholder="user@example.com" />
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Username</label>
+                  <input type="text" name="userName" value={editSubscriber.userName} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
                 </div>
-                <div className="col-span-2">
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Installation Address / Area</label>
-                  <input type="text" name="location" value={editSubscriber.location} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-600' : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-400'}`} placeholder="e.g. Indiranagar, Bangalore" />
+              </div>
+
+              {/* Personal Info */}
+              <h4 className={`text-sm font-bold uppercase mt-4 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Personal Information</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>First Name</label>
+                  <input type="text" name="firstName" value={editSubscriber.firstName} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Select Plan</label>
-                  <div className="relative">
-                    <select name="plan" value={editSubscriber.plan} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 appearance-none ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}>
-                      <option>Basic 50 (50 Mbps)</option>
-                      <option>Basic 100 (100 Mbps)</option>
-                      <option>GigaStream 300 (300 Mbps)</option>
-                      <option>Fiber Stream 500 (500 Mbps)</option>
-                      <option>Business 1Gbps (1 Gbps)</option>
-                    </select>
-                    <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
-                  </div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Last Name</label>
+                  <input type="text" name="lastName" value={editSubscriber.lastName} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
                 </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Phone Number</label>
+                  <input type="tel" name="phoneNumber" value={editSubscriber.phoneNumber} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Email ID</label>
+                  <input type="email" name="emailId" value={editSubscriber.emailId} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+              </div>
+
+              {/* Service Info */}
+              <h4 className={`text-sm font-bold uppercase mt-4 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Service Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>User Type</label>
+                  <select name="userType" value={editSubscriber.userType} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}>
+                    <option value="business">Business</option>
+                    <option value="home">Home</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>CAF Number</label>
+                  <input type="text" name="caf_num" value={editSubscriber.caf_num} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Activation Date</label>
+                  <select name="activationDate" value={editSubscriber.activationDate} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}>
+                    <option value="now">Now</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+                {editSubscriber.activationDate === 'custom' && (
+                  <>
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Custom Activation</label>
+                      <input type="datetime-local" name="customActivationDate" value={editSubscriber.customActivationDate} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                    </div>
+                    <div>
+                      <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Custom Expiration</label>
+                      <input type="datetime-local" name="customExpirationDate" value={editSubscriber.customExpirationDate} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                    </div>
+                  </>
+                )}
                 <div>
                   <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</label>
-                  <div className="relative">
-                    <select name="status" value={editSubscriber.status} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 appearance-none ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}>
-                      <option>Active</option>
-                      <option>Suspended</option>
-                      <option>Inactive</option>
-                    </select>
-                    <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-400'}`} />
-                  </div>
+                  <select name="status" value={editSubscriber.status} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}>
+                    <option value="Active">Active</option>
+                    <option value="Suspended">Suspended</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
                 </div>
+              </div>
+
+              {/* Address */}
+              <h4 className={`text-sm font-bold uppercase mt-4 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Installation Address</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Address Line 2</label>
+                  <input type="text" name="installation_address_line2" value={editSubscriber.installation_address_line2} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} placeholder="Floor, Building, Street" />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>City</label>
+                  <input type="text" name="installation_address_city" value={editSubscriber.installation_address_city} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>State</label>
+                  <input type="text" name="installation_address_state" value={editSubscriber.installation_address_state} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Pin Code</label>
+                  <input type="text" name="installation_address_pin" value={editSubscriber.installation_address_pin} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+                <div>
+                  <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Country</label>
+                  <input type="text" name="installation_address_country" value={editSubscriber.installation_address_country} onChange={handleEditInputChange} className={`w-full p-2.5 border rounded-lg text-sm outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`} />
+                </div>
+              </div>
+
+              {/* Settings */}
+              <div className="flex gap-6 mt-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" name="createBilling" checked={editSubscriber.createBilling} onChange={handleEditInputChange} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Create Billing</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" name="notifyUserSms" checked={editSubscriber.notifyUserSms} onChange={handleEditInputChange} className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Notify User via SMS</span>
+                </label>
               </div>
             </div>
             <div className={`p-4 border-t flex gap-3 justify-end rounded-b-xl ${isDark ? 'border-slate-800 bg-slate-900' : 'border-gray-200 bg-white'}`}>
               <button onClick={() => setIsEditModalOpen(false)} className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-gray-700 hover:bg-gray-100'}`}>Cancel</button>
-              <button onClick={handleUpdateSubscriber} disabled={!editSubscriber.name} className="px-4 py-2 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all">Update Subscriber</button>
+              <button onClick={handleUpdateSubscriber} disabled={!editSubscriber.firstName} className="px-4 py-2 text-sm font-bold text-white bg-green-600 rounded-lg hover:bg-green-500 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all">Update Customer</button>
             </div>
           </div>
         </div>
