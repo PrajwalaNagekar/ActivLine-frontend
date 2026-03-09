@@ -231,7 +231,7 @@ const Router = () => {
               </ProtectedRoute>
             }
           />
-          <Route
+          {/* <Route
             path="local-staff"
             element={
               <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
@@ -240,7 +240,7 @@ const Router = () => {
                 
               </ProtectedRoute>
             }
-          />
+          /> */}
 
           <Route
             path="collections"

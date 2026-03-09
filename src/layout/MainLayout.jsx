@@ -123,8 +123,9 @@ const MainLayout = () => {
   const sidebarItemsMap = {
     admin: adminSidebarItems,
     super_admin: adminSidebarItems,
-    franchise: franchiseSidebarItems,
-    franchise_admin: franchiseSidebarItems,
+    // Filter out the 'Local Staff' item for franchise roles
+    franchise: franchiseSidebarItems.filter(item => item.paths[0] !== '/local-staff'),
+    franchise_admin: franchiseSidebarItems.filter(item => item.paths[0] !== '/local-staff'),
     staff: staffSidebarItems,
     admin_staff: staffSidebarItems,
   };
