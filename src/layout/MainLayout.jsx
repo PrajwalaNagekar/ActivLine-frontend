@@ -58,6 +58,21 @@ const MainLayout = () => {
   }, []);
 
   useEffect(() => {
+    // Redirect to the correct dashboard after login, if landing on a generic page.
+    if (user) {
+      const role = user.role?.toLowerCase();
+
+      if (location.pathname === "/" || location.pathname === "/dashboard") {
+        if ((role === 'franchise' || role === 'franchise_admin') && location.pathname !== '/franchise-dashboard') {
+          navigate('/franchise-dashboard', { replace: true });
+        }
+      } else if (location.pathname === "/customers" && (role === 'franchise' || role === 'franchise_admin')) {
+        navigate('/my-customers', { replace: true });
+      }
+    }
+  }, [user, location.pathname, navigate]);
+
+  useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
 
@@ -93,10 +108,10 @@ const MainLayout = () => {
   };
 
   const handleNotificationClick = () => {
-    const role = user?.role;
-    if (role === "admin" || role === "SUPER_ADMIN") {
+    const role = user?.role?.toLowerCase();
+    if (role === "admin" || role === "super_admin") {
       navigate("/admin-notifications");
-    } else if (role === "franchise") {
+    } else if (role === "franchise" || role === "franchise_admin") {
       navigate("/franchise-notifications");
     } else {
       navigate("/staff-notifications");
@@ -107,6 +122,7 @@ const MainLayout = () => {
     admin: adminSidebarItems,
     super_admin: adminSidebarItems,
     franchise: franchiseSidebarItems,
+    franchise_admin: franchiseSidebarItems,
     staff: staffSidebarItems,
     admin_staff: staffSidebarItems,
   };
@@ -239,9 +255,9 @@ const MainLayout = () => {
                 </div>
                 <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 
                   ${isDark ? "border-slate-900" : "border-white"}
-                  ${user?.role === "admin" || user?.role === "SUPER_ADMIN" 
+                  ${["admin", "super_admin"].includes(user?.role?.toLowerCase()) 
                     ? "bg-emerald-500" 
-                    : user?.role === "franchise"
+                    : ["franchise", "franchise_admin"].includes(user?.role?.toLowerCase())
                     ? "bg-orange-500"
                     : "bg-blue-500"}`}
                 />

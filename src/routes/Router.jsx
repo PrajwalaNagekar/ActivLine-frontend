@@ -47,7 +47,7 @@ const FranchisePage = lazy(() => import("../pages/Admin/Franchise"));
 const FranchiseDashboard = lazy(() =>
   import("../pages/Franchise/Dashboard/Dashboard")
 );
-// const Mysubscribers = lazy(() => import('../pages/Franchise/Customers'));
+const FranchiseCustomers = lazy(() => import('../pages/Franchise/Customers'));
 const LocalStaff = lazy(() => import("../pages/Franchise/LocalStaff"));
 const Collections = lazy(() => import("../pages/Franchise/Collections"));
 // const ZoneSupport = lazy(() => import('../pages/Franchise/ZoneSupport'));
@@ -134,7 +134,7 @@ const Router = () => {
           <Route
             path="franchise-notifications"
             element={
-              <ProtectedRoute allowedRoles={["franchise"]}>
+              <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
                 
                   <FranchiseNotifications />
                 
@@ -176,7 +176,7 @@ const Router = () => {
           <Route
             path="franchise-dashboard"
             element={
-              <ProtectedRoute allowedRoles={["franchise"]}>
+              <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
                 
                   <FranchiseDashboard />
                 
@@ -187,17 +187,15 @@ const Router = () => {
           <Route
             path="my-customers"
             element={
-              <ProtectedRoute allowedRoles={["franchise"]}>
-                
-                  <Customers />
-                
+              <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
+                  <FranchiseCustomers onUpdateCash={() => {}} />
               </ProtectedRoute>
             }
           />
           <Route
             path="my-customers-details/:id"
             element={
-              <ProtectedRoute allowedRoles={["franchise"]}>
+              <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
                 
                   <CustomerDetails />
                 
@@ -235,7 +233,7 @@ const Router = () => {
           <Route
             path="local-staff"
             element={
-              <ProtectedRoute allowedRoles={["franchise"]}>
+              <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
                 
                   <LocalStaff />
                 
@@ -246,7 +244,7 @@ const Router = () => {
           <Route
             path="collections"
             element={
-              <ProtectedRoute allowedRoles={["franchise"]}>
+              <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
                 
                   <Collections cashInHand={12450} setCashInHand={() => {}} />
                 
@@ -344,7 +342,7 @@ const Router = () => {
           <Route
             path="Zone-tickets"
             element={
-              <ProtectedRoute allowedRoles={["franchise"]}>
+              <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
                 
                   <Tickets />
                 
@@ -395,7 +393,7 @@ const Router = () => {
           <Route
             path="profile"
             element={
-              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "franchise", "staff", "admin_staff"]}>
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "franchise", "franchise_admin", "staff", "admin_staff"]}>
                 <ProfileSwitcher
                   franchiseUser={franchiseUser}
                   onUpdate={setFranchiseUser}

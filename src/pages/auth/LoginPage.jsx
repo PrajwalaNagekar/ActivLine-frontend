@@ -54,6 +54,7 @@ const handleSubmit = async (values, { setSubmitting }) => {
         navigate("/dashboard");
         break;
       case "franchise":
+      case "franchise_admin":
         navigate("/franchise-dashboard");
         break;
       default:
