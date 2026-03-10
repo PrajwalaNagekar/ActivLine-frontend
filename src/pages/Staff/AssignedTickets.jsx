@@ -10,7 +10,7 @@ import {
   User,
   MessageSquare,
   Clock,
-  CheckCircle,
+  CheckCircle,  
   AlertCircle,
   ChevronLeft,
   ChevronRight,
