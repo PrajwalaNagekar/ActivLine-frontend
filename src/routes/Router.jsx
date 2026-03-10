@@ -50,6 +50,7 @@ const FranchiseDashboard = lazy(() =>
 const FranchiseCustomers = lazy(() => import('../pages/Franchise/Customers'));
 const LocalStaff = lazy(() => import("../pages/Franchise/LocalStaff"));
 const Collections = lazy(() => import("../pages/Franchise/Collections"));
+const FranchisePlans = lazy(() => import("../pages/Franchise/Frenchiseplans"));
 // const ZoneSupport = lazy(() => import('../pages/Franchise/ZoneSupport'));
 const ZoneTickets = lazy(() => import("../pages/Franchise/ZoneTickets"));
 const Profile = lazy(() => import("../pages/Franchise/Profile"));
@@ -249,6 +250,14 @@ const Router = () => {
                 
                   <Collections cashInHand={12450} setCashInHand={() => {}} />
                 
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="franchise-plans"
+            element={
+              <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
+                <FranchisePlans />
               </ProtectedRoute>
             }
           />

@@ -114,6 +114,12 @@ export const franchiseSidebarItems = [
     paths: ["/collections"],
   },
   {
+    icon: LayoutGrid,
+    label: "Plans",
+    key: "Plans",
+    paths: ["/franchise-plans"],
+  },
+  {
     icon: MessageSquare,
     label: "Tickets",
     key: "Tickets",

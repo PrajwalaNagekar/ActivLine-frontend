@@ -735,6 +735,23 @@ import {
 } from "../../api/staffticket.api";
 import { ChevronDown } from "lucide-react";
 
+const getMessageTime = (message) => {
+  const parsed = new Date(message?.createdAt).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const sortMessagesByCreatedAt = (list = []) =>
+  [...list].sort((a, b) => getMessageTime(a) - getMessageTime(b));
+
+const normalizeMessageForChat = (msg) => {
+  const role = String(msg.senderRole || "").toUpperCase();
+  return {
+    ...msg,
+    senderRole: role,
+    sender: role === "CUSTOMER" ? "customer" : "agent"
+  };
+};
+
 const AssignedTickets = () => {
   const { isDark } = useTheme();
   const { token } = useAuth();
@@ -828,12 +845,15 @@ const AssignedTickets = () => {
   useEffect(() => {
     if (!activeRoomId || !token) return;
 
-    setMessages([]);
+    setMessages([]); 
     setLoadingMessages(true);
 
     api
       .get(`/api/chat/staff/messages/${activeRoomId}`)
-      .then((res) => setMessages(res.data.data || []))
+      .then((res) => {
+        const normalized = (res.data.data || []).map(normalizeMessageForChat);
+        setMessages(sortMessagesByCreatedAt(normalized));
+      })
       .catch(() => setMessages([]))
       .finally(() => setLoadingMessages(false));
 
@@ -844,7 +864,7 @@ const AssignedTickets = () => {
     const onNewMessage = (msg) => {
       setMessages((prev) => {
         if (prev.some((m) => m._id === msg._id)) return prev;
-        return [...prev, msg];
+        return sortMessagesByCreatedAt([...prev, normalizeMessageForChat(msg)]);
       });
     };
 
@@ -852,8 +872,6 @@ const AssignedTickets = () => {
 
     return () => {
       socket.off("new-message", onNewMessage);
-      // Do NOT disconnect here – better to keep socket alive across room changes
-      // socket.disconnect();
     };
   }, [activeRoomId, token]);
 
@@ -1321,24 +1339,24 @@ const AssignedTickets = () => {
                     <div className="w-3 h-3 rounded-full bg-amber-500" />
                     <span>In Progress: {inProgressCount}</span>
                   </div>
-                  <div
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                      isDark
-                        ? "bg-gray-800 text-emerald-300"
-                        : "bg-emerald-50 text-emerald-700"
-                    }`}
-                  >
-                    <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                    <span>Resolved: {resolvedCount}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
-  );
-};
-
-export default AssignedTickets;
+                                    <div
+                                      className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
+                                        isDark
+                                          ? "bg-gray-800 text-emerald-300"
+                                          : "bg-emerald-50 text-emerald-700"
+                                      }`}
+                                    >
+                                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                                      <span>Resolved: {resolvedCount}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </main>
+                        </div>
+                      </div>
+                    );
+                  };
+                  
+                  export default AssignedTickets;

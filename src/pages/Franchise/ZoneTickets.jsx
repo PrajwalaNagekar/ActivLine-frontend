@@ -76,40 +76,39 @@ const toMessageType = (file) => {
   return file.type.startsWith("image/") ? "IMAGE" : "FILE";
 };
 
-const normalizeMessage = (m) => {
-  const attachmentsFromApi = m?.fileUrl
-    ? [{
-        url: m.fileUrl,
-        name: m.fileName || "attachment",
-        type: m.mimeType || m.fileType || "",
-        messageType: m.messageType || "FILE",
-      }]
-    : [];
+const getMessageTime = (message) => {
+  const parsed = new Date(message?.createdAt).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
-  const attachmentsFromSocket = Array.isArray(m?.attachments)
+const sortMessagesByCreatedAt = (list = []) =>
+  [...list].sort((a, b) => getMessageTime(a) - getMessageTime(b));
+
+const normalizeMessage = (m) => {
+
+  const attachments = Array.isArray(m?.attachments)
     ? m.attachments.map((a) => ({
-        url: a.url || "",
-        name: a.name || "attachment",
-        type: a.type || "",
-        messageType: a.messageType || "FILE",
+        url: a.url,
+        name: a.name,
+        type: a.mimeType,
+        messageType: a.type
       }))
     : [];
 
-  const attachments = attachmentsFromSocket.length
-    ? attachmentsFromSocket
-    : attachmentsFromApi;
+  const role = String(m.senderRole || "").toUpperCase();
+  const isCustomer = role === "CUSTOMER";
 
   return {
-    id: m._id || m.id || `${Date.now()}_${Math.random()}`,
-    sender: m.senderRole === "CUSTOMER" ? "customer" : (m.sender || "agent"),
-    senderRole: m.senderRole || "FRANCHISE_ADMIN",
-    text: m.message || m.text || "",
+    id: m._id || m.id || `${m.createdAt || ""}-${m.senderRole || ""}-${m.message || ""}`,
+    sender: isCustomer ? "customer" : "agent",
+    senderRole: role,
+    text: m.message || "",
     attachments,
-    time: new Date(m.createdAt || Date.now()).toLocaleTimeString([], {
+    time: new Date(m.createdAt).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     }),
-    createdAt: m.createdAt || new Date().toISOString(),
+    createdAt: m.createdAt
   };
 };
 
@@ -131,6 +130,10 @@ const ZoneTickets = () => {
   const messageEndRef = useRef();
 
   const activeChat = chats.find(c => c.id === activeChatId);
+  const sortedActiveMessages = useMemo(
+    () => sortMessagesByCreatedAt(activeChat?.messages || []),
+    [activeChat?.messages]
+  );
 
   // Load rooms
   useEffect(() => {
@@ -182,24 +185,29 @@ const ZoneTickets = () => {
     }
   };
 
-  const loadMessages = async (roomId) => {
-    try {
-      setLoadingMessages(true);
-      const res = await getRoomMessages(roomId);
+const loadMessages = async (roomId) => {
+  try {
+    setLoadingMessages(true);
 
-      const messages = (res.data || []).map(normalizeMessage);
+    const res = await getRoomMessages(roomId);
 
-      setChats(prev => prev.map(c =>
-        c.id === roomId
-          ? { ...c, messages }
-          : c
-      ));
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoadingMessages(false);
-    }
-  };
+    console.log("MESSAGES API RESPONSE:", res);   // 👈 ADD THIS
+
+    const messages = sortMessagesByCreatedAt(
+      (res?.data?.data || res?.data || []).map(normalizeMessage)
+    );
+
+    setChats(prev => prev.map(c =>
+      c.id === roomId
+        ? { ...c, messages }
+        : c
+    ));
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoadingMessages(false);
+  }
+};
 
   const handleChatSelect = (id) => {
     setActiveChatId(id);
@@ -225,7 +233,7 @@ const ZoneTickets = () => {
 
           return {
             ...chat,
-            messages: [...chat.messages, normalized],
+            messages: sortMessagesByCreatedAt([...chat.messages, normalized]),
             lastMsg: normalized.text || normalized.attachments?.[0]?.name || "Attachment",
             time: msg?.createdAt || new Date().toISOString(),
           };
@@ -280,7 +288,6 @@ const ZoneTickets = () => {
         message: "",
         attachments,
       });
-
       setTimeout(() => {
         loadMessages(activeChatId);
       }, 700);
@@ -653,7 +660,7 @@ const ZoneTickets = () => {
                     ))}
                   </div>
                 ) : (
-                  activeChat.messages.map((msg) => (
+                  sortedActiveMessages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex ${msg.sender === "agent" ? "justify-end" : "justify-start"} animate-fade-in`}
