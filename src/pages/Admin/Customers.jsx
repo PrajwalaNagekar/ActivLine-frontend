@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Filter, Plus, XCircle, ChevronDown, ChevronLeft, ChevronRight, Edit, Eye } from 'lucide-react';
+import { Search, Filter, XCircle, ChevronDown, ChevronLeft, ChevronRight, Edit, Eye } from 'lucide-react';
 import { useEffect } from "react";
 import { useTheme } from '../../context/ThemeContext';
 import api from "../../api/axios";
@@ -376,10 +376,10 @@ const handlePageChange = (page) => {
 </div>
 
 
- <div className="flex gap-3 relative items-center w-full md:w-auto">
+ <div className="relative w-full md:w-auto flex flex-col sm:flex-row sm:items-center gap-3">
 
   {/* 🔍 Search Box */}
-  <div className="relative flex-1 md:flex-none">
+  <div className="relative w-full sm:w-80 md:w-64">
     <Search
       className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${
         isDark ? 'text-slate-400' : 'text-gray-400'
@@ -393,7 +393,7 @@ const handlePageChange = (page) => {
         setSearchTerm(e.target.value);
         setCurrentPage(1);
       }}
-      className={`w-full md:w-64 pl-9 pr-3 py-2 border rounded-lg text-sm outline-none 
+      className={`w-full pl-9 pr-3 py-2 border rounded-lg text-sm outline-none 
         focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all
         ${
           isDark
@@ -414,15 +414,6 @@ const handlePageChange = (page) => {
   >
     <Filter className="w-4 h-4" />
     Filter
-  </button>
-
-  {/* ➕ Add Customer */}
-  <button
-    onClick={() => setIsModalOpen(true)}
-    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-all text-base"
-  >
-    <Plus className="w-4 h-4" />
-    Add Customer
   </button>
 
   {/* ✅ Filter Popup (UNCHANGED) */}
@@ -519,7 +510,42 @@ const handlePageChange = (page) => {
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-gray-200'}`}>
-                  {paginationData.paginatedSubscribers.length > 0 ? (
+                  {loading ? (
+                    Array.from({ length: Math.min(itemsPerPage, 8) }).map((_, i) => (
+                      <tr key={`skeleton-${i}`} className={`${isDark ? 'bg-slate-900/30' : 'bg-white'} animate-pulse`}>
+                        <td className="py-5 px-6">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-11 h-11 rounded-full ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                            <div className="space-y-2 min-w-[180px]">
+                              <div className={`h-4 w-36 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                              <div className={`h-3 w-24 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-5 px-6">
+                          <div className="space-y-2">
+                            <div className={`h-4 w-28 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                            <div className={`h-3 w-40 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                          </div>
+                        </td>
+                        <td className="py-5 px-6">
+                          <div className="space-y-2">
+                            <div className={`h-4 w-24 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                            <div className={`h-3 w-16 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                          </div>
+                        </td>
+                        <td className="py-5 px-6">
+                          <div className={`h-7 w-24 rounded-full ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                        </td>
+                        <td className="py-5 px-6">
+                          <div className="flex items-center justify-end gap-2">
+                            <div className={`h-8 w-8 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                            <div className={`h-8 w-8 rounded-lg ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : paginationData.paginatedSubscribers.length > 0 ? (
                     paginationData.paginatedSubscribers.map((sub, i) => (
                       <tr
                         key={i}

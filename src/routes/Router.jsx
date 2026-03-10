@@ -19,6 +19,15 @@ const LoginPage = lazy(() => import("../pages/auth/LoginPage"));
 const DashboardPage = lazy(() =>
   import("../pages/Admin/DashboardPage/DashboardPage")
 );
+const StaffDashboardPage = lazy(() =>
+  import("../pages/Staff/Dashboard/Staffdashboard")
+);
+const StaffCustomersPage = lazy(() =>
+  import("../pages/Staff/Customers/StaffCustomers")
+);
+const StaffCustomerDetailsPage = lazy(() =>
+  import("../pages/Staff/Customers/Staffcustomerdetails")
+);
 const Customers = lazy(() => import("../pages/Admin/Customers"));
 const CustomerDetails = lazy(() => import("../pages/Admin/CustomerDetails"));
 const FieldStaffPage = lazy(() => import("../pages/Admin/FieldStaffPage"));
@@ -83,6 +92,24 @@ const ProfileSwitcher = ({ franchiseUser, onUpdate }) => {
     return <FranchiseProfile franchiseUser={franchiseUser} onUpdate={onUpdate} />;
   }
   return <ProfilePage />;
+};
+
+const DashboardSwitcher = () => {
+  const { user } = useAuth();
+  const role = user?.role?.toLowerCase();
+  if (["staff", "admin_staff"].includes(role)) {
+    return <StaffDashboardPage />;
+  }
+  return <DashboardPage />;
+};
+
+const CustomersSwitcher = () => {
+  const { user } = useAuth();
+  const role = user?.role?.toLowerCase();
+  if (["staff", "admin_staff"].includes(role)) {
+    return <StaffCustomersPage />;
+  }
+  return <Customers />;
 };
 
 const Router = () => {
@@ -160,9 +187,7 @@ const Router = () => {
             path="dashboard"
             element={
               <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
-                
-                  <DashboardPage />
-                
+                <DashboardSwitcher />
               </ProtectedRoute>
             }
           />
@@ -209,9 +234,9 @@ const Router = () => {
           <Route
             path="customers"
             element={
-              
-                <Customers />
-              
+              <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
+                <CustomersSwitcher />
+              </ProtectedRoute>
             }
           />
           <Route
@@ -220,6 +245,14 @@ const Router = () => {
               
                 <CustomerDetails />
               
+            }
+          />
+          <Route
+            path="staff-customer/:id"
+            element={
+              <ProtectedRoute allowedRoles={["staff", "admin_staff"]}>
+                <StaffCustomerDetailsPage />
+              </ProtectedRoute>
             }
           />
 

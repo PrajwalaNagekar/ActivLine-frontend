@@ -312,7 +312,9 @@ const DashboardPage = () => {
           isDark={isDark}
         >
           <div className="overflow-hidden rounded-xl">
-            {recentTickets.length === 0 ? (
+            {loading ? (
+              <SkeletonTickets isDark={isDark} />
+            ) : recentTickets.length === 0 ? (
               <div
                 className={`p-8 text-center rounded-xl ${
                   isDark ? "bg-gray-700/50" : "bg-gray-100"
@@ -479,6 +481,9 @@ const DashboardPage = () => {
           icon={<TrendingUp className="h-5 w-5" />}
           isDark={isDark}
         >
+          {loading ? (
+            <SkeletonPayments isDark={isDark} />
+          ) : (
           <div className="space-y-6">
             {/* Animated placeholder */}
             <div className="relative overflow-hidden rounded-xl">
@@ -555,6 +560,7 @@ const DashboardPage = () => {
               ))}
             </div>
           </div>
+          )}
         </SectionCard>
       </div>
 
@@ -735,13 +741,52 @@ const SkeletonCards = () => (
     {[1, 2, 3, 4].map((i) => (
       <div
         key={i}
-        className="h-32 rounded-2xl animate-pulse"
+        className="relative overflow-hidden h-40 rounded-2xl border border-gray-200/20 bg-gradient-to-br from-gray-200/40 to-gray-300/20 dark:from-gray-700/40 dark:to-gray-800/30 animate-pulse"
         style={{
           animationDelay: `${i * 100}ms`,
         }}
-      />
+      >
+        <div className="p-6 h-full flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <div className="h-12 w-12 rounded-xl bg-gray-300/50 dark:bg-gray-600/40" />
+            <div className="h-4 w-10 rounded bg-gray-300/50 dark:bg-gray-600/40" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-8 w-24 rounded bg-gray-300/50 dark:bg-gray-600/40" />
+            <div className="h-4 w-36 rounded bg-gray-300/50 dark:bg-gray-600/40" />
+            <div className="h-1.5 w-full rounded bg-gray-300/50 dark:bg-gray-600/40" />
+          </div>
+        </div>
+      </div>
     ))}
   </>
+);
+
+const SkeletonTickets = ({ isDark }) => (
+  <div className={`rounded-xl p-4 ${isDark ? "bg-gray-700/40" : "bg-gray-100"} animate-pulse`}>
+    <div className="space-y-3">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <div key={i} className="grid grid-cols-5 gap-3">
+          <div className={`h-4 rounded ${isDark ? "bg-gray-600" : "bg-gray-300"}`} />
+          <div className={`h-4 rounded ${isDark ? "bg-gray-600" : "bg-gray-300"}`} />
+          <div className={`h-4 rounded ${isDark ? "bg-gray-600" : "bg-gray-300"}`} />
+          <div className={`h-4 rounded ${isDark ? "bg-gray-600" : "bg-gray-300"}`} />
+          <div className={`h-4 rounded ${isDark ? "bg-gray-600" : "bg-gray-300"}`} />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const SkeletonPayments = ({ isDark }) => (
+  <div className="space-y-6 animate-pulse">
+    <div className={`h-56 rounded-xl ${isDark ? "bg-gray-700/40" : "bg-gray-100"}`} />
+    <div className="grid grid-cols-3 gap-4">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className={`h-20 rounded-xl ${isDark ? "bg-gray-700/40" : "bg-gray-100"}`} />
+      ))}
+    </div>
+  </div>
 );
 
 // Add CSS animations
