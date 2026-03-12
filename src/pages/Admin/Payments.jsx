@@ -1,38 +1,165 @@
-import React, { useState, useMemo } from 'react';
-import { RefreshCw, AlertTriangle, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { TRANSACTIONS_DATA } from '../../data';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  Loader2,
+  XCircle,
+} from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import {
+  getPaymentHistoryByGroup,
+  getPaymentHistoryDetails,
+} from '../../api/paymnethistoyapi';
+
+const statusFilterToApi = {
+  All: '',
+  Paid: 'SUCCESS',
+  'Pending Dues': 'PENDING',
+};
+
+const statusToUi = {
+  SUCCESS: 'Paid',
+  PENDING: 'Pending',
+  FAILED: 'Failed',
+};
+
+const formatAmount = (value, currency = 'INR') => {
+  const amount = Number(value || 0);
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  }).format(Number.isNaN(amount) ? 0 : amount);
+};
+
+const formatDateTime = (value) => {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
+  return new Intl.DateTimeFormat('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
+
+const getDetailPairs = (details) => {
+  if (!details || typeof details !== 'object') return [];
+  const keys = ['profile Details', 'billing Details'];
+  const merged = keys.flatMap((key) => (Array.isArray(details[key]) ? details[key] : []));
+  return merged;
+};
 
 const BillingPage = () => {
   const { isDark } = useTheme();
+  const { user } = useAuth();
+
   const [filter, setFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const filteredTransactions = TRANSACTIONS_DATA.filter(tx => {
-    if (filter === 'All') return true;
-    return tx.status === filter;
-  });
+  const [transactions, setTransactions] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
-  // Pagination calculations
+  const [viewLoadingId, setViewLoadingId] = useState('');
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  const resolvedGroupId = useMemo(() => {
+    if (!user) return '';
+    return (
+      user.groupId ||
+      user.userGroupId ||
+      user.accountId ||
+      user.userName ||
+      user.username ||
+      user.profileId ||
+      user._id ||
+      ''
+    );
+  }, [user]);
+
+  const statusParam = useMemo(() => statusFilterToApi[filter] || '', [filter]);
+
+  const loadTransactions = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const res = await getPaymentHistoryByGroup({
+        groupId: resolvedGroupId || undefined,
+        page: currentPage,
+        limit: itemsPerPage,
+        status: statusParam,
+      });
+
+      const rows = Array.isArray(res?.data) ? res.data : [];
+      setTransactions(rows);
+      setTotalItems(Number(res?.total || 0));
+      setTotalPages(Number(res?.totalPages || 0));
+    } catch (err) {
+      setTransactions([]);
+      setTotalItems(0);
+      setTotalPages(0);
+      setError(err?.response?.data?.message || err?.message || 'Failed to load payment history');
+    } finally {
+      setLoading(false);
+    }
+  }, [resolvedGroupId, currentPage, itemsPerPage, statusParam]);
+
+  useEffect(() => {
+    loadTransactions();
+  }, [loadTransactions]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter]);
+
   const paginationData = useMemo(() => {
-    const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+    const safeTotalItems = totalItems;
+    const safeCurrentPage = currentPage;
+    const safeItemsPerPage = itemsPerPage;
+    const startIndex = safeTotalItems === 0 ? 0 : (safeCurrentPage - 1) * safeItemsPerPage + 1;
+    const endIndex = safeTotalItems === 0 ? 0 : Math.min(safeCurrentPage * safeItemsPerPage, safeTotalItems);
 
     return {
-      paginatedTransactions,
+      paginatedTransactions: transactions,
       totalPages,
-      totalItems: filteredTransactions.length,
-      startIndex: startIndex + 1,
-      endIndex: Math.min(endIndex, filteredTransactions.length)
+      totalItems: safeTotalItems,
+      startIndex,
+      endIndex,
     };
-  }, [filteredTransactions, currentPage, itemsPerPage]);
+  }, [transactions, totalPages, totalItems, currentPage, itemsPerPage]);
+
+  const uiRows = useMemo(() => {
+    return paginationData.paginatedTransactions.map((tx) => {
+      const status = statusToUi[tx.status] || tx.status || 'Pending';
+      const rawDate = tx.paidAt || tx.createdAt;
+
+      return {
+        id: tx.paymentId || tx._id || '--',
+        user: tx.profileId || '--',
+        plan: tx.planName || tx?.plan?.planName || '--',
+        amount: formatAmount(tx.amount ?? tx.planAmount, tx.currency || 'INR'),
+        status,
+        date: formatDateTime(rawDate),
+        type: 'Plan Payment',
+        paymentId: tx.paymentId || tx._id,
+      };
+    });
+  }, [paginationData.paginatedTransactions]);
 
   const handlePageChange = (page) => {
+    if (page < 1 || (paginationData.totalPages > 0 && page > paginationData.totalPages)) return;
     setCurrentPage(page);
-    // Scroll to top of table
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -41,67 +168,35 @@ const BillingPage = () => {
     setCurrentPage(1);
   };
 
-  // Reset to page 1 when filter changes
-  React.useEffect(() => {
-    setCurrentPage(1);
-  }, [filter]);
+  const handleViewDetails = async (paymentId) => {
+    if (!paymentId) return;
+
+    try {
+      setViewLoadingId(paymentId);
+      const res = await getPaymentHistoryDetails(paymentId);
+      const details = res?.data || res?.payment || res;
+      setSelectedPayment(details || null);
+      setIsViewModalOpen(true);
+    } catch (err) {
+      setSelectedPayment({
+        error: err?.response?.data?.message || err?.message || 'Failed to load payment details',
+      });
+      setIsViewModalOpen(true);
+    } finally {
+      setViewLoadingId('');
+    }
+  };
+
+  const closeModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedPayment(null);
+  };
 
   return (
     <div className="space-y-6">
-      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className={`p-6 rounded-xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg"><RefreshCw className="w-5 h-5" /></div>
-            <span className="text-xs font-medium text-green-400 bg-green-500/10 px-2 py-1 rounded">85% Ready</span>
-          </div>
-          <h3 className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>Auto-Billing Status</h3>
-          <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Next cycle runs in 4d 12h</p>
-          <div className={`w-full rounded-full h-1.5 mb-4 ${isDark ? 'bg-slate-800' : 'bg-gray-200'}`}>
-            <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: '85%' }}></div>
-          </div>
-          <button className={`w-full py-2 border rounded-lg text-sm font-medium transition-colors ${isDark ? 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700' : 'bg-gray-100 text-gray-900 border-gray-300 hover:bg-gray-200'}`}>Run Manual Batch</button>
-        </div>
-
-        <div className={`p-6 rounded-xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-red-500/10 text-red-400 rounded-lg"><AlertTriangle className="w-5 h-5" /></div>
-          </div>
-          <h3 className={`font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>Pending Dues</h3>
-          <p className={`text-sm mb-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Users at risk of suspension</p>
-          <div className={`text-3xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>₹2.4L</div>
-          <button className="w-full py-2 border border-red-500/20 text-red-400 bg-red-500/10 rounded-lg text-sm font-medium hover:bg-red-500/20">Trigger Reminders (SMS/WA)</button>
-        </div>
-
-        <div className={`p-6 rounded-xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-          <h3 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Payment Gateways</h3>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Razorpay</span>
-              </div>
-              <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>99.2% Success</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>UPI</span>
-              </div>
-              <span className={`text-sm font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>98.5% Success</span>
-            </div>
-          </div>
-          <button className={`w-full mt-8 text-sm font-medium hover:underline text-left ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>View Settlement Report →</button>
-        </div>
-      </div> */}
-
       <div className={`rounded-xl shadow-sm border flex flex-col h-full ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
         <div className={`p-6 border-b flex justify-between items-center flex-shrink-0 ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
-          <h1
-            className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'
-              }`}
-          >
-            Transactions
-          </h1>
+          <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Transactions</h1>
 
           <div className="relative">
             <select
@@ -111,13 +206,19 @@ const BillingPage = () => {
             >
               <option value="All">All Transactions</option>
               <option value="Paid">Paid</option>
-              <option value="Pending">Pending Dues</option>
+              <option value="Pending Dues">Pending Dues</option>
             </select>
             <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-500'}`} />
           </div>
         </div>
 
         <div className="flex-1 flex flex-col min-h-0 p-6">
+          {error && (
+            <div className={`mb-4 rounded-lg px-4 py-2 text-sm border ${isDark ? 'bg-red-500/10 border-red-500/20 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
+              {error}
+            </div>
+          )}
+
           <div className="flex-1 min-h-0 overflow-hidden">
             <div className={`rounded-lg border overflow-hidden h-full ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
               <div className="overflow-auto h-full">
@@ -127,40 +228,73 @@ const BillingPage = () => {
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Payment ID</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Plan</th>
-
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Amount</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Date</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Type</th>
-
+                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Action</th>
                     </tr>
                   </thead>
                   <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-gray-200'}`}>
-                    {paginationData.paginatedTransactions.length > 0 ? (
-                      paginationData.paginatedTransactions.map((tx, i) => (
-                        <tr key={i} className={`transition-colors ${isDark ? 'hover:bg-slate-800/50 bg-slate-900/30' : 'hover:bg-gray-50 bg-white'}`}>
+                    {loading ? (
+                      <tr>
+                        <td colSpan="8" className={`py-12 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                          <span className="inline-flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" /> Loading transactions...
+                          </span>
+                        </td>
+                      </tr>
+                    ) : uiRows.length > 0 ? (
+                      uiRows.map((tx) => (
+                        <tr key={tx.id} className={`transition-colors ${isDark ? 'hover:bg-slate-800/50 bg-slate-900/30' : 'hover:bg-gray-50 bg-white'}`}>
                           <td className={`py-4 px-6 font-mono text-xs ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.id}</td>
                           <td className={`py-4 px-6 font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{tx.user}</td>
-                          <td className={`py-4 px-6 font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{tx.amount}</td>
-
+                          <td className={`py-4 px-6 font-medium text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{tx.plan}</td>
                           <td className={`py-4 px-6 font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{tx.amount}</td>
                           <td className="py-4 px-6">
-                            <span className={`text-xs font-semibold px-3 py-1 rounded-full ${tx.status === 'Paid'
-                              ? (isDark ? 'text-green-400 bg-green-500/10 border border-green-500/20' : 'bg-green-50 text-green-700 border border-green-200')
-                              : (isDark ? 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20' : 'bg-yellow-50 text-yellow-700 border border-yellow-200')
-                              }`}>
+                            <span
+                              className={`text-xs font-semibold px-3 py-1 rounded-full ${tx.status === 'Paid'
+                                ? isDark
+                                  ? 'text-green-400 bg-green-500/10 border border-green-500/20'
+                                  : 'bg-green-50 text-green-700 border border-green-200'
+                                : tx.status === 'Failed'
+                                  ? isDark
+                                    ? 'text-red-400 bg-red-500/10 border border-red-500/20'
+                                    : 'bg-red-50 text-red-700 border border-red-200'
+                                  : isDark
+                                    ? 'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20'
+                                    : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                                }`}
+                            >
                               {tx.status === 'Paid' && <span className="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5 inline-block"></span>}
                               {tx.status}
                             </span>
                           </td>
-                          <td className={`py-4 px-6  text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.date}</td>
-                          <td className={`py-4 px-6  text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.type}</td>
-
+                          <td className={`py-4 px-6 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.date}</td>
+                          <td className={`py-4 px-6 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.type}</td>
+                          <td className="py-4 px-6">
+                            <button
+                              onClick={() => handleViewDetails(tx.paymentId)}
+                              disabled={viewLoadingId === tx.paymentId}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                isDark
+                                  ? 'bg-slate-800 text-slate-200 hover:bg-slate-700 disabled:opacity-50'
+                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50'
+                              }`}
+                            >
+                              {viewLoadingId === tx.paymentId ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Eye className="w-3.5 h-3.5" />
+                              )}
+                              View
+                            </button>
+                          </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="5" className={`py-12 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <td colSpan="8" className={`py-12 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                           No transactions found matching your filter.
                         </td>
                       </tr>
@@ -171,7 +305,6 @@ const BillingPage = () => {
             </div>
           </div>
 
-          {/* Pagination Controls */}
           <div className={`mt-6 flex-shrink-0 flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
@@ -199,8 +332,8 @@ const BillingPage = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${currentPage === 1
+                disabled={currentPage === 1 || loading}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${currentPage === 1 || loading
                   ? isDark
                     ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -214,14 +347,12 @@ const BillingPage = () => {
 
               <div className="flex items-center gap-1">
                 {Array.from({ length: paginationData.totalPages }, (_, i) => i + 1)
-                  .filter(page => {
-                    // Show first page, last page, current page, and pages around current
+                  .filter((page) => {
                     if (page === 1 || page === paginationData.totalPages) return true;
                     if (Math.abs(page - currentPage) <= 1) return true;
                     return false;
                   })
                   .map((page, index, array) => {
-                    // Add ellipsis
                     const showEllipsisBefore = index > 0 && array[index - 1] !== page - 1;
                     return (
                       <React.Fragment key={page}>
@@ -230,10 +361,9 @@ const BillingPage = () => {
                         )}
                         <button
                           onClick={() => handlePageChange(page)}
+                          disabled={loading}
                           className={`min-w-[36px] px-3 py-2 rounded-lg text-sm font-medium transition-all ${currentPage === page
-                            ? isDark
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-blue-600 text-white'
+                            ? 'bg-blue-600 text-white'
                             : isDark
                               ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
                               : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
@@ -248,8 +378,8 @@ const BillingPage = () => {
 
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === paginationData.totalPages}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${currentPage === paginationData.totalPages
+                disabled={loading || currentPage === paginationData.totalPages || paginationData.totalPages === 0}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${loading || currentPage === paginationData.totalPages || paginationData.totalPages === 0
                   ? isDark
                     ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -264,6 +394,65 @@ const BillingPage = () => {
           </div>
         </div>
       </div>
+
+      {isViewModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={closeModal}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`w-full max-w-2xl rounded-xl border shadow-xl ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}
+          >
+            <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Payment Details</h3>
+              <button
+                onClick={closeModal}
+                className={`${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'}`}
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4 max-h-[70vh] overflow-auto">
+              {selectedPayment?.error ? (
+                <p className={`${isDark ? 'text-red-300' : 'text-red-700'}`}>{selectedPayment.error}</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <p><span className="font-semibold">Payment ID:</span> {selectedPayment?.paymentId || selectedPayment?._id || '--'}</p>
+                    <p><span className="font-semibold">Order ID:</span> {selectedPayment?.orderId || selectedPayment?.razorpayOrderId || '--'}</p>
+                    <p><span className="font-semibold">Razorpay Payment ID:</span> {selectedPayment?.razorpayPaymentId || '--'}</p>
+                    <p><span className="font-semibold">Status:</span> {statusToUi[selectedPayment?.status] || selectedPayment?.status || '--'}</p>
+                    <p><span className="font-semibold">Amount:</span> {formatAmount(selectedPayment?.amount ?? selectedPayment?.planAmount ?? selectedPayment?.plan?.planAmount, selectedPayment?.currency || 'INR')}</p>
+                    <p><span className="font-semibold">Plan:</span> {selectedPayment?.planName || selectedPayment?.plan?.planName || '--'}</p>
+                    <p><span className="font-semibold">Profile ID:</span> {selectedPayment?.profileId || selectedPayment?.plan?.profileId || '--'}</p>
+                    <p><span className="font-semibold">Group ID:</span> {selectedPayment?.groupId || '--'}</p>
+                    <p><span className="font-semibold">Account ID:</span> {selectedPayment?.accountId || '--'}</p>
+                    <p><span className="font-semibold">Paid At:</span> {formatDateTime(selectedPayment?.paidAt)}</p>
+                    <p><span className="font-semibold">Created At:</span> {formatDateTime(selectedPayment?.createdAt)}</p>
+                    <p><span className="font-semibold">Updated At:</span> {formatDateTime(selectedPayment?.updatedAt)}</p>
+                  </div>
+
+                  {getDetailPairs(selectedPayment?.plan?.details || selectedPayment?.planDetails).length > 0 && (
+                    <div>
+                      <h4 className={`text-sm font-semibold mb-2 ${isDark ? 'text-slate-200' : 'text-gray-900'}`}>Plan Details</h4>
+                      <div className={`rounded-lg border ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                        {getDetailPairs(selectedPayment?.plan?.details || selectedPayment?.planDetails).map((item, idx) => (
+                          <div
+                            key={`${item?.property}-${idx}`}
+                            className={`flex items-start justify-between gap-3 px-3 py-2 text-sm border-b last:border-b-0 ${isDark ? 'border-slate-700' : 'border-gray-100'}`}
+                          >
+                            <span className={`${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{item?.property || '--'}</span>
+                            <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{String(item?.value ?? '--')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

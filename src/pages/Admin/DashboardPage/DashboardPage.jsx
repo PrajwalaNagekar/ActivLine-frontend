@@ -19,6 +19,7 @@ import {
   getTodayResolvedTickets,
   getTotalCustomers,
   getRecentTickets,
+  getRecentPayments,
 } from "../../../api/admindashboard.api";
 import Lottie from "lottie-react";
 import telecomAnimation from "../../../animations/Activline-Dashboard.json";
@@ -48,6 +49,7 @@ const DashboardPage = () => {
   const { isDark } = useTheme();
   const [stats, setStats] = useState(null);
   const [recentTickets, setRecentTickets] = useState([]);
+  const [recentPayments, setRecentPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hoveredCard, setHoveredCard] = useState(null);
 
@@ -61,12 +63,14 @@ const DashboardPage = () => {
           todayResolvedRes,
           totalCustomersRes,
           ticketsRes,
+          paymentsRes,
         ] = await Promise.all([
           getOpenTickets(),
           getInProgressTickets(),
           getTodayResolvedTickets(),
           getTotalCustomers(),
           getRecentTickets(5),
+          getRecentPayments(5),
         ]);
 
         setStats({
@@ -77,8 +81,10 @@ const DashboardPage = () => {
         });
 
         setRecentTickets(ticketsRes);
+        setRecentPayments(Array.isArray(paymentsRes) ? paymentsRes : []);
       } catch (err) {
         console.error("Dashboard load error:", err);
+        setRecentPayments([]);
       } finally {
         setLoading(false);
       }
@@ -173,6 +179,51 @@ const DashboardPage = () => {
           ? "bg-gray-500/20 text-gray-300 border-gray-500/30"
           : "bg-gray-50 text-gray-700 border-gray-200";
     }
+  };
+
+  const getPaymentStatusColor = (status) => {
+    switch (String(status || "").toUpperCase()) {
+      case "SUCCESS":
+      case "PAID":
+        return isDark
+          ? "bg-green-500/20 text-green-300 border-green-500/30"
+          : "bg-green-50 text-green-700 border-green-200";
+      case "PENDING":
+        return isDark
+          ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+          : "bg-amber-50 text-amber-700 border-amber-200";
+      case "FAILED":
+        return isDark
+          ? "bg-red-500/20 text-red-300 border-red-500/30"
+          : "bg-red-50 text-red-700 border-red-200";
+      default:
+        return isDark
+          ? "bg-gray-500/20 text-gray-300 border-gray-500/30"
+          : "bg-gray-50 text-gray-700 border-gray-200";
+    }
+  };
+
+  const formatPaymentAmount = (amount, currency = "INR") => {
+    const value = Number(amount || 0);
+    if (Number.isNaN(value)) return "--";
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return "--";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "--";
+    return new Intl.DateTimeFormat("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
   };
 
   return (
@@ -474,7 +525,7 @@ const DashboardPage = () => {
           </div>
         </SectionCard>
 
-        {/* RECENT PAYMENTS WITH PLACEHOLDER ANIMATION */}
+        {/* RECENT PAYMENTS */}
         <SectionCard
           title="Recent Payments"
           subtitle="Latest financial transactions"
@@ -483,83 +534,137 @@ const DashboardPage = () => {
         >
           {loading ? (
             <SkeletonPayments isDark={isDark} />
-          ) : (
-          <div className="space-y-6">
-            {/* Animated placeholder */}
-            <div className="relative overflow-hidden rounded-xl">
-              <div
-                className={`p-8 rounded-xl ${
-                  isDark ? "bg-gray-700/50" : "bg-gray-100"
-                }`}
-              >
-                <div className="flex items-center justify-center mb-4">
-                  <div className="relative">
-                    <div
-                      className={`h-24 w-24 rounded-full border-4 ${
-                        isDark
-                          ? "border-gray-600"
-                          : "border-gray-300"
-                      }`}
-                    ></div>
-                    <div
-                      className={`absolute inset-0 h-24 w-24 rounded-full border-4 border-t-transparent border-blue-500 animate-spin`}
-                    ></div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <h3
-                    className={`text-xl font-semibold mb-2 ${
-                      isDark ? "text-white" : "text-gray-900"
-                    }`}
-                  >
-                    Payments Module
-                  </h3>
-                  <p
-                    className={`mb-4 ${
-                      isDark ? "text-gray-400" : "text-gray-600"
-                    }`}
-                  >
-                    Coming Soon
-                  </p>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-medium animate-pulse">
-                    <span>●</span> In Development
-                  </div>
-                </div>
-              </div>
-
-              {/* Progress animation */}
-              <div
-                className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-shimmer`}
-              ></div>
-            </div>
-
-            {/* Stats preview */}
+          ) : recentPayments.length === 0 ? (
             <div
-              className={`grid grid-cols-3 gap-4 p-4 rounded-xl ${
-                isDark ? "bg-gray-800/50" : "bg-white"
+              className={`p-8 text-center rounded-xl ${
+                isDark ? "bg-gray-700/50" : "bg-gray-100"
               }`}
             >
-              {["Today", "Week", "Month"].map((period) => (
-                <div
-                  key={period}
-                  className="text-center p-3 rounded-lg transition-all duration-300 hover:scale-105"
-                >
-                  <div
-                    className={`text-2xl font-bold mb-1 bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent`}
-                  >
-                    $0
-                  </div>
-                  <div
-                    className={`text-xs ${
-                      isDark ? "text-gray-400" : "text-gray-600"
+              <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+              <p className="text-gray-400">No recent payments</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-xl">
+              <table className="w-full">
+                <thead>
+                  <tr
+                    className={`border-b ${
+                      isDark ? "border-gray-700" : "border-gray-200"
                     }`}
                   >
-                    {period}
-                  </div>
-                </div>
-              ))}
+                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">
+                      Payment
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">
+                      Plan
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">
+                      Status
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">
+                      Paid At
+                    </th>
+                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-500">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentPayments.map((payment) => (
+                    <tr
+                      key={payment.paymentId || payment.razorpayPaymentId || payment.orderId}
+                      className={`group transition-all duration-300 hover:scale-[1.02] ${
+                        isDark
+                          ? "hover:bg-gray-700/50 border-b border-gray-700/50"
+                          : "hover:bg-gray-50 border-b border-gray-100"
+                      }`}
+                    >
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col">
+                          <span
+                            className={`font-medium ${
+                              isDark ? "text-white" : "text-gray-900"
+                            }`}
+                          >
+                            {formatPaymentAmount(
+                              payment.amount ?? payment.planAmount,
+                              payment.currency || "INR"
+                            )}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            #{String(payment.paymentId || payment.razorpayPaymentId || "--").slice(-8)}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex flex-col">
+                          <span
+                            className={`font-medium ${
+                              isDark ? "text-gray-200" : "text-gray-800"
+                            }`}
+                          >
+                            {payment.planName || payment?.plan?.planName || "--"}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {payment.profileId || "--"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${getPaymentStatusColor(
+                            payment.status
+                          )}`}
+                        >
+                          {String(payment.status || "UNKNOWN").toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div
+                          className={`text-sm ${
+                            isDark ? "text-gray-400" : "text-gray-600"
+                          }`}
+                        >
+                          {formatDateTime(payment.paidAt || payment.createdAt)}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => navigate("/payments")}
+                          className={`p-1.5 rounded-lg transition-all duration-300 hover:scale-110 ${
+                            isDark
+                              ? "hover:bg-gray-700 text-gray-400 hover:text-white"
+                              : "hover:bg-gray-100 text-gray-600 hover:text-gray-900"
+                          }`}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              <div
+                className={`p-3 text-center border-t ${
+                  isDark
+                    ? "border-gray-700 bg-gray-800/50"
+                    : "border-gray-200 bg-gray-50"
+                }`}
+              >
+                <button
+                  onClick={() => navigate("/payments")}
+                  className={`text-sm font-medium transition-all duration-300 hover:gap-2 ${
+                    isDark
+                      ? "text-blue-400 hover:text-blue-300"
+                      : "text-blue-600 hover:text-blue-500"
+                  }`}
+                >
+                  View all payments
+                  <ArrowUpRight className="inline h-4 w-4 ml-1" />
+                </button>
+              </div>
             </div>
-          </div>
           )}
         </SectionCard>
       </div>
@@ -878,3 +983,4 @@ const styles = `
 const styleSheet = document.createElement("style");
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
+

@@ -76,6 +76,12 @@ export const adminSidebarItems = [
     paths: ["/reports"],
   },
   {
+    icon: FileClock,
+    label: "Logs",
+    key: "Logs",
+    paths: ["/logs"],
+  },
+  {
     icon: Settings,
     label: "Settings",
     key: "Settings",
