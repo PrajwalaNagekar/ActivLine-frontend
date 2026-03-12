@@ -121,6 +121,12 @@ export const franchiseSidebarItems = [
     paths: ["/franchise-plans"],
   },
   {
+    icon: CreditCard,
+    label: "Payment History",
+    key: "Payment History",
+    paths: ["/payment-history"],
+  },
+  {
     icon: MessageSquare,
     label: "Tickets",
     key: "Tickets",
