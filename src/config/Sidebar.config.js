@@ -127,6 +127,12 @@ export const franchiseSidebarItems = [
     paths: ["/payment-history"],
   },
   {
+    icon: ChartNoAxesColumnIncreasing,
+    label: "Reports",
+    key: "Reports",
+    paths: ["/franchise-reports"],
+  },
+  {
     icon: MessageSquare,
     label: "Tickets",
     key: "Tickets",

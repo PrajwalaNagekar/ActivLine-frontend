@@ -64,6 +64,7 @@ const PaymentHistory = lazy(() => import("../pages/Franchise/Paymenthistory"));
 // const ZoneSupport = lazy(() => import('../pages/Franchise/ZoneSupport'));
 const ZoneTickets = lazy(() => import("../pages/Franchise/ZoneTickets"));
 const FranchiseProfile = lazy(() => import("../pages/Franchise/Frenchiseprofile"));
+const FranchiseReport = lazy(() => import("../pages/Franchise/FrenchiseReport"));
 
 //staff
 const AssignedTickets = lazy(() => import("../pages/Staff/AssignedTickets"));
@@ -301,6 +302,14 @@ const Router = () => {
             element={
               <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
                 <PaymentHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="franchise-reports"
+            element={
+              <ProtectedRoute allowedRoles={["franchise", "franchise_admin"]}>
+                <FranchiseReport />
               </ProtectedRoute>
             }
           />
