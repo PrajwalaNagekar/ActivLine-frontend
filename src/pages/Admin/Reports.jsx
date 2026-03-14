@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
-import { getReportSummary } from "../../api/reportapi";
+import { getAdminReportSummary } from "../../api/reportapi";
 
 const formatMonthLabel = (value) => {
     if (!value || typeof value !== "string") return "--";
@@ -62,7 +62,7 @@ const Reports = () => {
                     return;
                 }
 
-                const data = await getReportSummary({
+                const data = await getAdminReportSummary({
                     accountId: resolvedAccountId || undefined,
                     months,
                 });
@@ -98,7 +98,11 @@ const Reports = () => {
     const supportData = useMemo(() => {
         const rows = Array.isArray(summary?.resolvedTicketsByStaff) ? summary.resolvedTicketsByStaff : [];
         return rows.map((item, index) => ({
-            staff: item?._id || `Staff ${index + 1}`,
+            staff:
+                item?.staffName?.trim() ||
+                item?.staffEmail?.trim() ||
+                item?._id ||
+                "Unassigned",
             resolved: Number(item?.resolvedCount || 0),
         }));
     }, [summary]);

@@ -1,18 +1,20 @@
 import axios from "axios";
 
 const api = axios.create({
-<<<<<<< HEAD
-  baseURL: import.meta.env.VITE_BACKEND_API_URL,
-=======
-  baseURL: "http://localhost:8001" ,
->>>>>>> 9e115be56a74cc5d4b4d57735b87bdd862657aa6
+  baseURL: import.meta.env.VITE_BACKEND_API_URL || "http://localhost:8000",
 });
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token"); // IMPORTANT
+    const tokenStorageKey = import.meta.env.VITE_TOKEN_STORAGE_KEY || "token";
+    const token =
+      localStorage.getItem(tokenStorageKey) ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("accessToken");
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = token.startsWith("Bearer ")
+        ? token
+        : `Bearer ${token}`;
     }
     return config;
   },
