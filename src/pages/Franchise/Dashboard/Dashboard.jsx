@@ -1,21 +1,119 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import FullScreenLoader from '../../../components/loaders/FullscreenLoaderWithLogo';
-import { FRANCHISE_KPI_DATA } from '../../../data';
 import KPICard from '../../../components/KPICard';
-import { MapPin } from 'lucide-react';
 import { useTheme } from '../../../context/ThemeContext';
+import { useAuth } from '../../../context/AuthContext';
+import { getFranchiseReportSummary } from '../../../api/reportapi';
+
+const formatAmount = (value, currency = 'INR') => {
+    const amount = Number(value || 0);
+    return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency,
+        maximumFractionDigits: 2,
+    }).format(Number.isNaN(amount) ? 0 : amount);
+};
+
+const formatDateTime = (value) => {
+    if (!value) return '--';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '--';
+    return new Intl.DateTimeFormat('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(date);
+};
 
 const Dashboard = () => {
     const { isDark } = useTheme();
+    const { user } = useAuth();
+
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [summary, setSummary] = useState(null);
+
+    const resolvedAccountId = useMemo(
+        () => user?.accountId || user?.AccountId || user?.account_id || '',
+        [user]
+    );
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 1000);
+        let mounted = true;
 
-        return () => clearTimeout(timer);
-    }, []);
+        const load = async () => {
+            try {
+                setIsLoading(true);
+                setError('');
+
+                if (!resolvedAccountId) {
+                    throw new Error('Missing accountId for dashboard reports');
+                }
+
+                const data = await getFranchiseReportSummary({
+                    accountId: resolvedAccountId,
+                    months: 6,
+                });
+
+                if (mounted) setSummary(data || null);
+            } catch (err) {
+                if (mounted) {
+                    setSummary(null);
+                    setError(err?.response?.data?.message || err?.message || 'Failed to load dashboard reports');
+                }
+            } finally {
+                if (mounted) setIsLoading(false);
+            }
+        };
+
+        load();
+
+        return () => {
+            mounted = false;
+        };
+    }, [resolvedAccountId]);
+
+    const kpis = useMemo(() => {
+        const totalCollectedAmount = summary?.totalCollectedAmount ?? 0;
+        const customersCreatedThisMonth = summary?.customersCreatedThisMonth ?? 0;
+        const resolvedTicketsThisMonth = summary?.resolvedTicketsThisMonth ?? 0;
+        const openTicketCustomers = summary?.openTicketCustomers ?? 0;
+
+        return [
+            {
+                title: 'Total Collected',
+                value: formatAmount(totalCollectedAmount),
+                sub: 'Last 6 months',
+            },
+            {
+                title: 'Customers Created',
+                value: String(customersCreatedThisMonth),
+                sub: 'This month',
+            },
+            {
+                title: 'Resolved Tickets',
+                value: String(resolvedTicketsThisMonth),
+                sub: 'This month',
+            },
+            {
+                title: 'Open Ticket Customers',
+                value: String(openTicketCustomers),
+                sub: 'Currently open',
+            },
+        ];
+    }, [summary]);
+
+    const resolvedTickets = useMemo(() => {
+        const rows = Array.isArray(summary?.resolvedTicketsThisMonthList)
+            ? summary.resolvedTicketsThisMonthList
+            : [];
+        return rows
+            .slice()
+            .sort((a, b) => new Date(b?.resolvedAt || 0) - new Date(a?.resolvedAt || 0))
+            .slice(0, 6);
+    }, [summary]);
 
     return (
         <>
@@ -23,58 +121,66 @@ const Dashboard = () => {
 
             {!isLoading && (
                 <div className="space-y-6">
+                    {error && (
+                        <div className={`rounded-lg px-4 py-2 text-sm border ${isDark ? 'bg-red-500/10 border-red-500/20 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                            {error}
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {FRANCHISE_KPI_DATA.map((kpi, index) => (
+                        {kpis.map((kpi, index) => (
                             <KPICard key={index} {...kpi} />
                         ))}
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Local Collections Chart */}
-                        <div className={`lg:col-span-2 p-6 rounded-xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                            <div className="flex justify-between items-center mb-6">
-                                <div>
-                                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Monthly Collections</h3>
-                                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Cash vs Online Payments</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className={`flex items-center gap-1 text-xs ${isDark ? 'text-slate-400' : 'text-gray-600'}`}><div className="w-2 h-2 rounded-full bg-blue-500"></div> Online</span>
-                                    <span className={`flex items-center gap-1 text-xs ${isDark ? 'text-slate-400' : 'text-gray-600'}`}><div className="w-2 h-2 rounded-full bg-green-500"></div> Cash</span>
-                                </div>
-                            </div>
-                            <div className={`h-64 w-full rounded-lg flex items-end justify-between px-4 pb-4 relative overflow-hidden border ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-gray-50 border-gray-200'}`}>
-                                <div className="absolute inset-x-0 bottom-0 h-full flex items-end justify-around px-4">
-                                    {[65, 70, 45, 80, 55, 90].map((h, i) => (
-                                        <div key={i} className={`w-8 rounded-t-sm relative group h-full flex items-end ${isDark ? 'bg-slate-700' : 'bg-gray-300'}`}>
-                                            <div style={{ height: `${h}%` }} className="w-full bg-blue-500 rounded-t-sm relative"></div>
-                                            <div style={{ height: `${h * 0.4}%` }} className="w-full bg-green-500 absolute bottom-0 left-0 rounded-t-sm opacity-80"></div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className={`w-full flex justify-between text-xs z-10 pt-4 border-t mt-auto ${isDark ? 'text-slate-500 border-slate-700' : 'text-gray-600 border-gray-300'}`}>
-                                    <span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span>
-                                </div>
+                    <div className={`p-6 rounded-xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Recently Resolved Tickets</h3>
+                                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>This month</p>
                             </div>
                         </div>
 
-                        {/* Local Area Map */}
-                        <div className={`p-6 rounded-xl shadow-sm border ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-                            <h3 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>My Coverage Area</h3>
-                            <p className={`text-sm mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Sector 4, Indiranagar</p>
-                            <div className={`aspect-square rounded-lg relative overflow-hidden flex items-center justify-center border ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-gray-50 border-gray-200'}`}>
-                                <div className="absolute inset-0 bg-[url('https://api.placeholder.com/assets/map-pattern.png')] opacity-10"></div>
-                                {/* Outline of sector */}
-                                <div className="w-40 h-40 border-2 border-orange-500/50 rounded-full flex items-center justify-center bg-orange-500/5">
-                                    <MapPin className="text-orange-500 w-6 h-6" />
-                                </div>
-                                <div className={`absolute bottom-4 left-4 px-3 py-1 rounded text-xs border ${isDark ? 'bg-slate-900/80 text-white border-slate-700' : 'bg-white/90 text-gray-900 border-gray-300'}`}>
-                                    850 Active Users
-                                </div>
+                        {resolvedTickets.length === 0 ? (
+                            <p className={`${isDark ? 'text-slate-400' : 'text-gray-600'}`}>No resolved tickets yet.</p>
+                        ) : (
+                            <div className="overflow-auto">
+                                <table className="min-w-full text-sm">
+                                    <thead>
+                                        <tr className={`${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                                            <th className="text-left py-2 pr-4">Ticket</th>
+                                            <th className="text-left py-2 pr-4">Customer</th>
+                                            <th className="text-left py-2 pr-4">Assigned Staff</th>
+                                            <th className="text-left py-2 pr-4">Resolved At</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {resolvedTickets.map((t) => (
+                                            <tr key={t?._id || t?.ticketId} className={`${isDark ? 'border-slate-800' : 'border-gray-200'} border-t`}>
+                                                <td className={`py-2 pr-4 ${isDark ? 'text-slate-200' : 'text-gray-900'}`}>
+                                                    <div className="font-medium">{t?.ticketName || '--'}</div>
+                                                    <div className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-xs`}>
+                                                        #{t?.ticketId || t?._id || '--'}
+                                                    </div>
+                                                </td>
+                                                <td className={`py-2 pr-4 ${isDark ? 'text-slate-200' : 'text-gray-900'}`}>
+                                                    <div className="font-medium">{t?.customer?.name || '--'}</div>
+                                                    <div className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-xs`}>
+                                                        {t?.customer?.phoneNumber || t?.customer?.email || '--'}
+                                                    </div>
+                                                </td>
+                                                <td className={`py-2 pr-4 ${isDark ? 'text-slate-200' : 'text-gray-900'}`}>
+                                                    {t?.assignedStaffName || t?.assignedStaffEmail || t?.assignedStaff || 'Super Admin'}
+                                                </td>
+                                                <td className={`py-2 pr-4 ${isDark ? 'text-slate-200' : 'text-gray-900'}`}>
+                                                    {formatDateTime(t?.resolvedAt)}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                            <button className="w-full mt-4 py-2 text-orange-400 bg-orange-500/10 hover:bg-orange-500/20 rounded-lg text-sm font-medium transition-colors">
-                                View Detailed Map
-                            </button>
-                        </div>
+                        )}
                     </div>
                 </div>
             )}
