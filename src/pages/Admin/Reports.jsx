@@ -12,8 +12,7 @@ import {
     Legend
 } from "recharts";
 import { useTheme } from "../../context/ThemeContext";
-import { useAuth } from "../../context/AuthContext";
-import { getAdminReportSummary } from "../../api/reportapi";
+import { getGraphSummary } from "../../api/graphSummary.api";
 
 const formatMonthLabel = (value) => {
     if (!value || typeof value !== "string") return "--";
@@ -27,22 +26,10 @@ const formatMonthLabel = (value) => {
 
 const Reports = () => {
     const { isDark } = useTheme();
-    const { user } = useAuth();
     const [summary, setSummary] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const months = 3;
-
-    const resolvedAccountId = useMemo(() => {
-        if (!user) return "";
-        return (
-            user.accountId ||
-            user.userName ||
-            user.username ||
-            user._id ||
-            ""
-        );
-    }, [user]);
+    const months = 6;
 
     const cardStyle = isDark
         ? "bg-slate-900 border-slate-800"
@@ -55,17 +42,7 @@ const Reports = () => {
             try {
                 setLoading(true);
                 setError("");
-
-                if (!resolvedAccountId) {
-                    setSummary(null);
-                    setError("Missing account information to load reports.");
-                    return;
-                }
-
-                const data = await getAdminReportSummary({
-                    accountId: resolvedAccountId || undefined,
-                    months,
-                });
+                const data = await getGraphSummary({ months });
 
                 setSummary(data || null);
             } catch (err) {
@@ -77,7 +54,7 @@ const Reports = () => {
         };
 
         loadReport();
-    }, [resolvedAccountId, months]);
+    }, [months]);
 
     const revenueData = useMemo(() => {
         const rows = Array.isArray(summary?.monthlyRevenue) ? summary.monthlyRevenue : [];
@@ -96,15 +73,27 @@ const Reports = () => {
     }, [summary]);
 
     const supportData = useMemo(() => {
-        const rows = Array.isArray(summary?.resolvedTicketsByStaff) ? summary.resolvedTicketsByStaff : [];
+        const rows = Array.isArray(summary?.topResolvers) ? summary.topResolvers : [];
         return rows.map((item, index) => ({
             staff:
-                item?.staffName?.trim() ||
-                item?.staffEmail?.trim() ||
-                item?._id ||
-                "Unassigned",
+                item?.name?.trim() ||
+                item?.email?.trim() ||
+                item?.id ||
+                `Staff ${index + 1}`,
             resolved: Number(item?.resolvedCount || 0),
         }));
+    }, [summary]);
+
+    const customersCreatedThisMonth = useMemo(() => {
+        const rows = Array.isArray(summary?.monthlyCustomers) ? summary.monthlyCustomers : [];
+        const last = rows.length ? rows[rows.length - 1] : null;
+        return Number(last?.totalCustomers || 0);
+    }, [summary]);
+
+    const resolvedTicketsThisMonth = useMemo(() => {
+        const rows = Array.isArray(summary?.monthlyResolvedTickets) ? summary.monthlyResolvedTickets : [];
+        const last = rows.length ? rows[rows.length - 1] : null;
+        return Number(last?.resolvedCount || 0);
     }, [summary]);
 
     return (
@@ -126,13 +115,13 @@ const Reports = () => {
                 <div className={`col-span-12 md:col-span-6 p-4 rounded-xl border ${cardStyle}`}>
                     <p className={`text-sm ${isDark ? "text-slate-400" : "text-gray-500"}`}>Customers Created (This Month)</p>
                     <p className={`mt-2 text-2xl font-bold ${titleStyle}`}>
-                        {Number(summary?.customersCreatedThisMonth || 0)}
+                        {customersCreatedThisMonth}
                     </p>
                 </div>
                 <div className={`col-span-12 md:col-span-6 p-4 rounded-xl border ${cardStyle}`}>
                     <p className={`text-sm ${isDark ? "text-slate-400" : "text-gray-500"}`}>Resolved Tickets (This Month)</p>
                     <p className={`mt-2 text-2xl font-bold ${titleStyle}`}>
-                        {Number(summary?.resolvedTicketsThisMonth || 0)}
+                        {resolvedTicketsThisMonth}
                     </p>
                 </div>
             </div>
