@@ -14,6 +14,12 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const clearAuth = () => {
+    localStorage.clear();
+    setUser(null);
+    setToken(null);
+  };
+
   /* ---------- LOAD FROM STORAGE ON REFRESH ---------- */
   useEffect(() => {
     const rawStoredToken = localStorage.getItem("token");
@@ -40,6 +46,21 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const onForceLogout = () => clearAuth();
+    const onTokenRefreshed = (e) => setToken(e?.detail?.accessToken || null);
+
+    window.addEventListener("auth:forceLogout", onForceLogout);
+    window.addEventListener("auth:tokenRefreshed", onTokenRefreshed);
+
+    return () => {
+      window.removeEventListener("auth:forceLogout", onForceLogout);
+      window.removeEventListener("auth:tokenRefreshed", onTokenRefreshed);
+    };
+  }, []);
+
   /* ---------- LOGIN ---------- */
   const login = (userData, tokenValue) => {
     if (tokenValue) {
@@ -63,9 +84,7 @@ const logout = async () => {
     // even if API fails, continue logout
     console.error("Logout API failed", err);
   } finally {
-    localStorage.clear();
-    setUser(null);
-    setToken(null);
+    clearAuth();
   }
 };
 
