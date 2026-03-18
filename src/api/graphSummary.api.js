@@ -16,3 +16,9 @@ export const getGraphSummary = async ({ months = 6 } = {}) => {
   return res.data?.data;
 };
 
+export const getAssignedCustomersGraphSummary = async ({ months = 6 } = {}) => {
+  const params = cleanParams({ months });
+  const res = await api.get("/api/dashboard/assigned-customers", { params });
+  return res.data?.data;
+};
+

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Pencil, Trash2, Plus, Eye, Search, Filter, XCircle,
   ChevronLeft, ChevronRight, Mail, Phone, MapPin, Calendar,
@@ -28,6 +28,7 @@ const MySubscribers = () => {
   const [showFilter, setShowFilter] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const filterRef = useRef(null);
 
   // Modal states
   const [editModal, setEditModal] = useState(false);
@@ -48,6 +49,20 @@ const MySubscribers = () => {
   useEffect(() => {
     fetchCustomers(page);
   }, [page, searchTerm, selectedPlan, selectedStatus]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!showFilter) return;
+      if (filterRef.current && !filterRef.current.contains(event.target)) {
+        setShowFilter(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showFilter]);
 
   const fetchCustomers = async (pageNumber) => {
     try {
@@ -191,7 +206,7 @@ const MySubscribers = () => {
         </div>
 
         {/* Search and Filter */}
-        <div className="flex gap-3 relative items-center w-full md:w-auto">
+        <div ref={filterRef} className="flex gap-3 relative items-center w-full md:w-auto">
           <div className="relative flex-1 md:flex-none">
             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${
               isDark ? "text-slate-400" : "text-gray-400"

@@ -33,6 +33,7 @@ const CustomerDetails = lazy(() => import("../pages/Admin/CustomerDetails"));
 const FieldStaffPage = lazy(() => import("../pages/Admin/FieldStaffPage"));
 const Staff = lazy(() => import("../pages/Admin/Staff"));
 const Reports = lazy(() => import("../pages/Admin/Reports"));
+const StaffReports = lazy(() => import("../pages/Staff/Staff Reports/StaffReports"));
 const Logs = lazy(() => import("../pages/Admin/Logs"));
 const Plans = lazy(() => import("../pages/Admin/Plans"));
 const Payments = lazy(() => import("../pages/Admin/Payments"));
@@ -61,6 +62,7 @@ const LocalStaff = lazy(() => import("../pages/Franchise/LocalStaff"));
 const Collections = lazy(() => import("../pages/Franchise/Collections"));
 const FranchisePlans = lazy(() => import("../pages/Franchise/Frenchiseplans"));
 const PaymentHistory = lazy(() => import("../pages/Franchise/Paymenthistory"));
+const StaffPaymentHistory = lazy(() => import("../pages/Staff/Payment_History/Paymenthistory"));
 // const ZoneSupport = lazy(() => import('../pages/Franchise/ZoneSupport'));
 const ZoneTickets = lazy(() => import("../pages/Franchise/ZoneTickets"));
 const FranchiseProfile = lazy(() => import("../pages/Franchise/Frenchiseprofile"));
@@ -112,6 +114,15 @@ const CustomersSwitcher = () => {
     return <StaffCustomersPage />;
   }
   return <Customers />;
+};
+
+const ReportsSwitcher = () => {
+  const { user } = useAuth();
+  const role = user?.role?.toLowerCase();
+  if (["staff", "admin_staff"].includes(role)) {
+    return <StaffReports />;
+  }
+  return <Reports />;
 };
 
 const Router = () => {
@@ -350,9 +361,7 @@ const Router = () => {
             path="reports"
             element={
               <ProtectedRoute allowedRoles={["admin", "SUPER_ADMIN", "staff", "admin_staff"]}>
-                
-                  <Reports />
-                
+                  <ReportsSwitcher />
               </ProtectedRoute>
             }
           />
@@ -416,6 +425,14 @@ const Router = () => {
                 
                   <AssignedTickets />
                 
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="staff-payment-history"
+            element={
+              <ProtectedRoute allowedRoles={["staff", "admin_staff"]}>
+                <StaffPaymentHistory />
               </ProtectedRoute>
             }
           />

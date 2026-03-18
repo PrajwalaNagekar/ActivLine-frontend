@@ -166,6 +166,12 @@ export const staffSidebarItems = [
     paths: ["/customers"],
   },
   {
+    icon: CreditCard,
+    label: "Payment History",
+    key: "Payment History",
+    paths: ["/staff-payment-history"],
+  },
+  {
     icon: ChartNoAxesColumnIncreasing,
     label: "Reports",
     key: "Reports",

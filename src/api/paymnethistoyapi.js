@@ -71,3 +71,39 @@ export const getPaymentHistoryDetails = async (paymentId) => {
 
   return response.data;
 };
+
+export const getAllCustomersPaymentHistory = async ({
+  page = 1,
+  limit = 10,
+  planName,
+  status,
+  date,
+  fromDate,
+  toDate,
+  accountId,
+  groupId,
+  profileId,
+  userName,
+} = {}) => {
+  const params = cleanParams({
+    page,
+    limit,
+    planName,
+    status,
+    date,
+    fromDate,
+    toDate,
+    accountId,
+    groupId,
+    profileId,
+    userName,
+  });
+
+  const response = await api.get(`/api/payment/history/all-customers`, { params });
+  return response.data;
+};
+
+export const getFranchiseList = async () => {
+  const response = await api.get(`/api/franchise`);
+  return response.data;
+};

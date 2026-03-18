@@ -55,8 +55,10 @@ export const getRecentTickets = async (limit = 5) => {
     status: room?.status || "OPEN",
     createdAt: room?.createdAt || room?.updatedAt || new Date().toISOString(),
     customer:
+      room?.customer?.userName ||
       room?.customer?.fullName ||
       room?.customer?.name ||
+      room?.customer?.emailId ||
       room?.customer?.email ||
       "N/A",
   }));

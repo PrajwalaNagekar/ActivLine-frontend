@@ -13,12 +13,7 @@ const ApiKeys = () => {
         "Secure API key used for processing online payments and transactions.",
       key: "rzp_live_98sd7f****A12",
     },
-    {
-      name: "Radius / Metering Server",
-      description:
-        "Tracks user data usage, bandwidth consumption, and session metrics.",
-      key: "radius_key_7sd9****X91",
-    },
+   
   ];
 
   const copyKey = (key, name) => {

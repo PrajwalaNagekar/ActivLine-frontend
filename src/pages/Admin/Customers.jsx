@@ -31,6 +31,9 @@ const SubscribersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
 const [selectedPlan, setSelectedPlan] = useState('All');
 const [selectedStatus, setSelectedStatus] = useState('All');
+  const [franchiseOptions, setFranchiseOptions] = useState([]);
+  const [selectedFranchise, setSelectedFranchise] = useState('All');
+  const [franchiseError, setFranchiseError] = useState('');
 
   const [newSubscriber, setNewSubscriber] = useState({
     userGroupId: '',
@@ -281,7 +284,8 @@ const fetchCustomers = useCallback(async (page, limit) => {
       limit,
       search: searchTerm?.trim() || undefined,
       status: selectedStatus !== "All" ? selectedStatus : undefined,
-      plan: selectedPlan !== "All" ? selectedPlan : undefined,
+      userType: selectedPlan !== "All" ? selectedPlan : undefined,
+      accountId: selectedFranchise !== "All" ? selectedFranchise : undefined,
     };
 
     const res = await api.get('/api/customer/customers', { params });
@@ -304,6 +308,7 @@ const fetchCustomers = useCallback(async (page, limit) => {
       email: c.emailId,
       location: c.address?.city || "N/A",
       plan: c.userType || "Plan N/A",
+      accountId: c.accountId || "",
       tech: "Fiber",
       status: c.status || "ACTIVE",
     }));
@@ -315,7 +320,32 @@ const fetchCustomers = useCallback(async (page, limit) => {
   } finally {
     setLoading(false);
   }
-}, [searchTerm, selectedStatus, selectedPlan]);
+}, [searchTerm, selectedStatus, selectedPlan, selectedFranchise]);
+
+  const franchiseLookup = useMemo(() => {
+    const pairs = franchiseOptions
+      .filter((f) => f && f.accountId)
+      .map((f) => [
+        f.accountId,
+        f.accountName || f.companyName || f.accountId,
+      ]);
+    return new Map(pairs);
+  }, [franchiseOptions]);
+
+  useEffect(() => {
+    const loadFranchises = async () => {
+      try {
+        setFranchiseError('');
+        const res = await api.get('/api/franchise');
+        const rows = Array.isArray(res?.data?.data) ? res.data.data : [];
+        setFranchiseOptions(rows);
+      } catch (err) {
+        setFranchiseOptions([]);
+        setFranchiseError(err?.response?.data?.message || err?.message || 'Failed to load franchises');
+      }
+    };
+    loadFranchises();
+  }, []);
 
 
 useEffect(() => {
@@ -344,6 +374,13 @@ const handlePageChange = (page) => {
 
   const handleItemsPerPageChange = (value) => {
     setItemsPerPage(Number(value));
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setSelectedStatus("All");
+    setSelectedPlan("All");
+    setSelectedFranchise("All");
     setCurrentPage(1);
   };
 
@@ -410,7 +447,7 @@ const handlePageChange = (page) => {
   {/* Filter */}
   <button
     onClick={() => setShowFilter((prev) => !prev)}
-    className={`flex items-center gap-2 px-4 py-2 border rounded-lg whitespace-nowrap
+    className={`flex items-center justify-center px-3 py-2 border rounded-lg whitespace-nowrap
     ${
       isDark
         ? "bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
@@ -418,10 +455,83 @@ const handlePageChange = (page) => {
     }`}
   >
     <Filter className="w-4 h-4" />
-    Filter
   </button>
-</div>
 
+  {showFilter && (
+    <div className={`absolute right-0 top-12 w-80 p-4 rounded-xl shadow-2xl border z-50 animate-in fade-in zoom-in duration-150
+      ${isDark ? "bg-slate-900 border-slate-700" : "bg-white border-gray-200"}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h4 className={`text-base font-bold ${isDark ? "text-white" : "text-gray-900"}`}>Filters</h4>
+        <button
+          onClick={clearFilters}
+          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-all ${
+            isDark ? "bg-slate-800 text-slate-200 hover:bg-slate-700" : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+          }`}
+        >
+          Clear
+        </button>
+      </div>
+
+      <label className={`text-sm font-semibold ${isDark ? "text-slate-400" : "text-gray-600"}`}>Status</label>
+      <select
+        value={selectedStatus}
+        onChange={(e) => {
+          setSelectedStatus(e.target.value);
+          setCurrentPage(1);
+        }}
+        className={`w-full mt-1 mb-3 p-2 border rounded-lg text-sm ${
+          isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-gray-300"
+        }`}
+      >
+        <option value="All">All</option>
+        <option value="ACTIVE">ACTIVE</option>
+        <option value="INACTIVE">INACTIVE</option>
+        <option value="SUSPENDED">SUSPENDED</option>
+      </select>
+
+      <label className={`text-sm font-semibold ${isDark ? "text-slate-400" : "text-gray-600"}`}>Plan Type</label>
+      <select
+        value={selectedPlan}
+        onChange={(e) => {
+          setSelectedPlan(e.target.value);
+          setCurrentPage(1);
+        }}
+        className={`w-full mt-1 mb-3 p-2 border rounded-lg text-sm ${
+          isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-gray-300"
+        }`}
+      >
+        <option value="All">All</option>
+        <option value="home">Home</option>
+        <option value="business">Business</option>
+      </select>
+
+      <label className={`text-sm font-semibold ${isDark ? "text-slate-400" : "text-gray-600"}`}>Franchise</label>
+      <select
+        value={selectedFranchise}
+        onChange={(e) => {
+          setSelectedFranchise(e.target.value);
+          setCurrentPage(1);
+        }}
+        className={`w-full mt-1 p-2 border rounded-lg text-sm ${
+          isDark ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-gray-300"
+        }`}
+      >
+        <option value="All">All Franchises</option>
+        {franchiseOptions.map((franchise) => (
+          <option key={franchise._id || franchise.accountId} value={franchise.accountId || ''}>
+            {(franchise.accountName || franchise.companyName || franchise.accountId || 'Unknown')}{franchise.accountId ? ` (${franchise.accountId})` : ''}
+          </option>
+        ))}
+      </select>
+
+      {franchiseError && (
+        <div className={`mt-3 text-xs ${isDark ? 'text-yellow-300' : 'text-yellow-700'}`}>
+          {franchiseError}
+        </div>
+      )}
+    </div>
+  )}
+</div>
 
 
       </div>
@@ -451,6 +561,7 @@ const handlePageChange = (page) => {
                   <tr className={`${isDark ? 'bg-slate-800/50 border-b border-slate-800' : 'bg-gray-50 border-b border-gray-200'}`}>
                     <th className={`py-4 px-6 text-sm font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Customer</th>
                     <th className={`py-4 px-6 text-sm font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Contact</th>
+                    <th className={`py-4 px-6 text-sm font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Franchise</th>
                     <th className={`py-4 px-6 text-sm font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Plan Info</th>
                     <th className={`py-4 px-6 text-sm font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</th>
                     <th className={`py-4 px-6 text-sm font-semibold uppercase tracking-wider text-right ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Actions</th>
@@ -479,6 +590,12 @@ const handlePageChange = (page) => {
                           <div className="space-y-2">
                             <div className={`h-4 w-24 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
                             <div className={`h-3 w-16 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                          </div>
+                        </td>
+                        <td className="py-5 px-6">
+                          <div className="space-y-2">
+                            <div className={`h-4 w-28 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
+                            <div className={`h-3 w-20 rounded ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`} />
                           </div>
                         </td>
                         <td className="py-5 px-6">
@@ -513,6 +630,14 @@ const handlePageChange = (page) => {
                         <td className="py-5 px-6">
                           <div className={`text-base font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.mobile || 'N/A'}</div>
                           <div className={`text-sm mt-0.5 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>{sub.email || 'N/A'}</div>
+                        </td>
+                        <td className="py-5 px-6">
+                          <div className={`text-base font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+                            {franchiseLookup.get(sub.accountId) || sub.accountId || 'N/A'}
+                          </div>
+                          <div className={`text-sm mt-0.5 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>
+                            {sub.accountId || 'N/A'}
+                          </div>
                         </td>
                         <td className="py-5 px-6">
                           <div className={`text-base font-medium ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>{sub.plan}</div>

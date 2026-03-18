@@ -1,17 +1,24 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Eye,
   Loader2,
   XCircle,
 } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../../context/ThemeContext';
+import { useAuth } from '../../../context/AuthContext';
 import {
-  getFranchisePaymentHistoryByAccount,
-  getFranchisePaymentHistoryDetails,
-} from '../../api/frenchise/paymanehistypapi';
+  getAssignedPaymentHistory,
+  getAssignedPaymentHistoryDetails,
+} from '../../../api/staff/staffPaymentHistoryApi';
+
+const statusFilterToApi = {
+  All: '',
+  Paid: 'SUCCESS',
+  'Pending Dues': 'PENDING',
+};
 
 const statusToUi = {
   SUCCESS: 'Paid',
@@ -41,6 +48,22 @@ const formatDateTime = (value) => {
   }).format(date);
 };
 
+const toDisplayText = (value) => {
+  if (value === null || value === undefined) return '--';
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (typeof value === 'object') {
+    return (
+      value.name ||
+      value.fullName ||
+      value.email ||
+      value.phoneNumber ||
+      value._id ||
+      '--'
+    );
+  }
+  return '--';
+};
+
 const getDetailPairs = (details) => {
   if (!details || typeof details !== 'object') return [];
   const keys = ['profile Details', 'billing Details'];
@@ -52,7 +75,13 @@ const BillingPage = () => {
   const { isDark } = useTheme();
   const { user } = useAuth();
 
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('All');
+  const [planName, setPlanName] = useState('');
+  const [date, setDate] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [customerIdFilter, setCustomerIdFilter] = useState('');
+  const [profileIdFilter, setProfileIdFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -66,35 +95,45 @@ const BillingPage = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  const resolvedAccountId = useMemo(
-    () => user?.accountId || user?.AccountId || '',
-    [user]
-  );
   const resolvedProfileId = useMemo(
     () => user?.profileId || user?.ProfileId || '',
     [user]
   );
+
+  const statusParam = useMemo(() => statusFilterToApi[filter] || '', [filter]);
 
   const loadTransactions = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
 
-      if (!resolvedAccountId) {
-        throw new Error('Account ID is required for franchise payment history');
-      }
-
-      const res = await getFranchisePaymentHistoryByAccount({
-        accountId: resolvedAccountId,
+      const res = await getAssignedPaymentHistory({
         page: currentPage,
         limit: itemsPerPage,
-        profileId: resolvedProfileId || undefined,
+        status: statusParam,
+        planName: planName.trim() || undefined,
+        date: date || undefined,
+        fromDate: fromDate || undefined,
+        toDate: toDate || undefined,
+        profileId: profileIdFilter.trim() || resolvedProfileId || undefined,
+        customerId: customerIdFilter.trim() || undefined,
       });
 
-      const rows = Array.isArray(res?.data) ? res.data : [];
+      const payload = Array.isArray(res) ? { data: res } : (res || {});
+      const rows =
+        payload?.data ||
+        payload?.payments ||
+        payload?.items ||
+        payload?.history ||
+        [];
       setTransactions(rows);
-      setTotalItems(Number(res?.total || 0));
-      setTotalPages(Number(res?.totalPages || 0));
+      const meta = payload?.meta || {};
+      const total = Number(meta?.total ?? payload?.total ?? payload?.totalItems ?? payload?.count ?? 0);
+      const pages =
+        Number(meta?.totalPages ?? payload?.totalPages ?? payload?.pages ?? 0) ||
+        (itemsPerPage > 0 ? Math.ceil(total / itemsPerPage) : 0);
+      setTotalItems(total);
+      setTotalPages(pages);
     } catch (err) {
       setTransactions([]);
       setTotalItems(0);
@@ -104,10 +143,16 @@ const BillingPage = () => {
       setLoading(false);
     }
   }, [
-    resolvedAccountId,
+    resolvedProfileId,
     currentPage,
     itemsPerPage,
-    resolvedProfileId,
+    statusParam,
+    planName,
+    date,
+    fromDate,
+    toDate,
+    customerIdFilter,
+    profileIdFilter,
   ]);
 
   useEffect(() => {
@@ -116,7 +161,7 @@ const BillingPage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, []);
+  }, [filter, planName, date, fromDate, toDate, customerIdFilter, profileIdFilter]);
 
   const paginationData = useMemo(() => {
     const safeTotalItems = totalItems;
@@ -135,42 +180,22 @@ const BillingPage = () => {
   }, [transactions, totalPages, totalItems, currentPage, itemsPerPage]);
 
   const uiRows = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    const filtered = term
-      ? paginationData.paginatedTransactions.filter((tx) => {
-          const haystack = [
-            tx.paymentId,
-            tx._id,
-            tx.orderId,
-            tx.razorpayPaymentId,
-            tx.userName,
-            tx.profileId,
-            tx.accountId,
-            tx.status,
-            tx.amount,
-          ]
-            .filter((value) => value !== undefined && value !== null)
-            .join(' ')
-            .toLowerCase();
-          return haystack.includes(term);
-        })
-      : paginationData.paginatedTransactions;
-
-    return filtered.map((tx) => {
+    return paginationData.paginatedTransactions.map((tx) => {
       const status = statusToUi[tx.status] || tx.status || 'Pending';
       const rawDate = tx.paidAt || tx.createdAt;
 
       return {
         id: tx.paymentId || tx._id || '--',
-        user: tx.userName || tx.profileId || '--',
-        plan: tx.planName || tx?.plan?.planName || '--',
+        user: toDisplayText(tx.customer) || tx.profileId || '--',
+        plan: toDisplayText(tx.planName || tx?.plan?.planName || tx?.plan),
         amount: formatAmount(tx.amount ?? tx.planAmount, tx.currency || 'INR'),
         status,
         date: formatDateTime(rawDate),
+        type: 'Plan Payment',
         paymentId: tx.paymentId || tx._id,
       };
     });
-  }, [paginationData.paginatedTransactions, searchTerm]);
+  }, [paginationData.paginatedTransactions]);
 
   const handlePageChange = (page) => {
     if (page < 1 || (paginationData.totalPages > 0 && page > paginationData.totalPages)) return;
@@ -188,7 +213,7 @@ const BillingPage = () => {
 
     try {
       setViewLoadingId(paymentId);
-      const res = await getFranchisePaymentHistoryDetails(paymentId);
+      const res = await getAssignedPaymentHistoryDetails(paymentId);
       const details = res?.data || res?.payment || res;
       setSelectedPayment(details || null);
       setIsViewModalOpen(true);
@@ -211,30 +236,59 @@ const BillingPage = () => {
     <div className="space-y-6">
       <div className={`rounded-xl shadow-sm border flex flex-col h-full ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
         <div className={`p-6 border-b flex flex-col gap-4 ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Payment History</h1>
-              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
-                Search by payment id, customer, order id, or status
-              </p>
+          <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Payment History</h1>
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="relative">
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 appearance-none pr-8 cursor-pointer transition-colors ${isDark ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'}`}
+              >
+                <option value="All">All Transactions</option>
+                <option value="Paid">Paid</option>
+                <option value="Pending Dues">Pending Dues</option>
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-500'}`} />
             </div>
-            <div className={`text-xs px-3 py-1 rounded-full border ${isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-gray-50 border-gray-200 text-gray-600'}`}>
-              Total records: <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{totalItems}</span>
-            </div>
-          </div>
-
-          <div className={`rounded-xl border p-4 ${isDark ? 'bg-slate-900/60 border-slate-800' : 'bg-gray-50 border-gray-200'}`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <label className="flex flex-col gap-1 text-xs sm:col-span-2 lg:col-span-3">
-                <span className={`${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Search</span>
-                <input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search payments..."
-                  className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder:text-slate-500' : 'bg-white border-gray-300 text-gray-900 placeholder:text-gray-400'}`}
-                />
-              </label>
-            </div>
+            <input
+              value={planName}
+              onChange={(e) => setPlanName(e.target.value)}
+              placeholder="Filter by Plan Name"
+              className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+            />
+            <input
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              type="date"
+              title="Exact Date"
+              className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+            />
+            <input
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              type="date"
+              title="From Date"
+              className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+            />
+            <input
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              type="date"
+              title="To Date"
+              className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+            />
+            <input
+              value={customerIdFilter}
+              onChange={(e) => setCustomerIdFilter(e.target.value)}
+              placeholder="Filter by Customer ID"
+              className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+            />
+            <input
+              value={profileIdFilter}
+              onChange={(e) => setProfileIdFilter(e.target.value)}
+              placeholder={resolvedProfileId ? `Profile ID (${resolvedProfileId})` : 'Filter by Profile ID'}
+              className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-gray-300 text-gray-900'}`}
+            />
           </div>
         </div>
 
@@ -257,13 +311,14 @@ const BillingPage = () => {
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Amount</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Date</th>
+                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Type</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Action</th>
                     </tr>
                   </thead>
                   <tbody className={`divide-y ${isDark ? 'divide-slate-800' : 'divide-gray-200'}`}>
                     {loading ? (
                       <tr>
-                        <td colSpan="7" className={`py-12 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <td colSpan="8" className={`py-12 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                           <span className="inline-flex items-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin" /> Loading transactions...
                           </span>
@@ -296,6 +351,7 @@ const BillingPage = () => {
                             </span>
                           </td>
                           <td className={`py-4 px-6 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.date}</td>
+                          <td className={`py-4 px-6 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.type}</td>
                           <td className="py-4 px-6">
                             <button
                               onClick={() => handleViewDetails(tx.paymentId)}
@@ -318,7 +374,7 @@ const BillingPage = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className={`py-12 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <td colSpan="8" className={`py-12 text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                           No transactions found matching your filter.
                         </td>
                       </tr>

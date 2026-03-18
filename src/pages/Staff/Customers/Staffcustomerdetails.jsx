@@ -208,8 +208,8 @@ const StaffCustomerDetails = () => {
             </div>
           </SectionCard>
 
-          {/* Current Plan */}
-          <SectionCard title="Current Plan" isDark={isDark}>
+          Current Plan
+          {/* <SectionCard title="Current Plan" isDark={isDark}>
             <div className="mb-5">
               <p className={`text-lg font-bold mb-1 ${isDark ? 'text-violet-400' : 'text-violet-600'}`}>
                 {customer.userType || 'Standard Plan'}
@@ -221,10 +221,10 @@ const StaffCustomerDetails = () => {
             <button className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 text-white font-medium rounded-xl transition-colors shadow-lg shadow-violet-500/20 text-sm">
               Change Plan
             </button>
-          </SectionCard>
+          </SectionCard> */}
 
           {/* Admin Notes */}
-          <SectionCard title="Admin Notes" isDark={isDark}>
+          {/* <SectionCard title="Admin Notes" isDark={isDark}>
             <div className="relative mb-4">
               <textarea
                 className={`w-full h-32 p-4 rounded-xl border text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 transition-all ${
@@ -249,7 +249,7 @@ const StaffCustomerDetails = () => {
               {savingNote ? <RefreshCw size={14} className="animate-spin" /> : null}
               {savingNote ? 'Saving...' : 'Save Note'}
             </button>
-          </SectionCard>
+          </SectionCard> */}
         </div>
 
         {/* ── Right column ── */}

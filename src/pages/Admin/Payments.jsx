@@ -8,9 +8,9 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import { useAuth } from '../../context/AuthContext';
 import {
-  getPaymentHistoryByGroup,
+  getAllCustomersPaymentHistory,
+  getFranchiseList,
   getPaymentHistoryDetails,
 } from '../../api/paymnethistoyapi';
 
@@ -55,11 +55,28 @@ const getDetailPairs = (details) => {
   return merged;
 };
 
+const getCustomerName = (customer, fallback) => {
+  if (customer && typeof customer === 'object') {
+    return (
+      customer.name ||
+      customer.userName ||
+      customer.username ||
+      customer.email ||
+      customer.phoneNumber ||
+      fallback ||
+      '--'
+    );
+  }
+  return fallback || '--';
+};
+
 const BillingPage = () => {
   const { isDark } = useTheme();
-  const { user } = useAuth();
 
   const [filter, setFilter] = useState('All');
+  const [accountIdFilter, setAccountIdFilter] = useState('');
+  const [franchiseOptions, setFranchiseOptions] = useState([]);
+  const [franchiseError, setFranchiseError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -73,20 +90,6 @@ const BillingPage = () => {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  const resolvedGroupId = useMemo(() => {
-    if (!user) return '';
-    return (
-      user.groupId ||
-      user.userGroupId ||
-      user.accountId ||
-      user.userName ||
-      user.username ||
-      user.profileId ||
-      user._id ||
-      ''
-    );
-  }, [user]);
-
   const statusParam = useMemo(() => statusFilterToApi[filter] || '', [filter]);
 
   const loadTransactions = useCallback(async () => {
@@ -94,11 +97,11 @@ const BillingPage = () => {
       setLoading(true);
       setError('');
 
-      const res = await getPaymentHistoryByGroup({
-        groupId: resolvedGroupId || undefined,
+      const res = await getAllCustomersPaymentHistory({
         page: currentPage,
         limit: itemsPerPage,
         status: statusParam,
+        accountId: accountIdFilter.trim() || undefined,
       });
 
       const rows = Array.isArray(res?.data) ? res.data : [];
@@ -113,15 +116,31 @@ const BillingPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [resolvedGroupId, currentPage, itemsPerPage, statusParam]);
+  }, [currentPage, itemsPerPage, statusParam, accountIdFilter]);
+
+  const loadFranchises = useCallback(async () => {
+    try {
+      setFranchiseError('');
+      const res = await getFranchiseList();
+      const rows = Array.isArray(res?.data) ? res.data : [];
+      setFranchiseOptions(rows);
+    } catch (err) {
+      setFranchiseOptions([]);
+      setFranchiseError(err?.response?.data?.message || err?.message || 'Failed to load franchises');
+    }
+  }, []);
 
   useEffect(() => {
     loadTransactions();
   }, [loadTransactions]);
 
   useEffect(() => {
+    loadFranchises();
+  }, [loadFranchises]);
+
+  useEffect(() => {
     setCurrentPage(1);
-  }, [filter]);
+  }, [filter, accountIdFilter]);
 
   const paginationData = useMemo(() => {
     const safeTotalItems = totalItems;
@@ -144,17 +163,17 @@ const BillingPage = () => {
       const status = statusToUi[tx.status] || tx.status || 'Pending';
       const rawDate = tx.paidAt || tx.createdAt;
 
-      return {
-        id: tx.paymentId || tx._id || '--',
-        user: tx.profileId || '--',
-        plan: tx.planName || tx?.plan?.planName || '--',
-        amount: formatAmount(tx.amount ?? tx.planAmount, tx.currency || 'INR'),
-        status,
-        date: formatDateTime(rawDate),
-        type: 'Plan Payment',
-        paymentId: tx.paymentId || tx._id,
-      };
-    });
+        return {
+          id: tx.paymentId || tx._id || '--',
+          user: getCustomerName(tx.customer, tx.userName || tx.profileId || '--'),
+          plan: tx.planName || tx?.plan?.planName || '--',
+          amount: formatAmount(tx.amount ?? tx.planAmount, tx.currency || 'INR'),
+          status,
+          date: formatDateTime(rawDate),
+          franchise: tx.accountId || tx.groupId || '--',
+          paymentId: tx.paymentId || tx._id,
+        };
+      });
   }, [paginationData.paginatedTransactions]);
 
   const handlePageChange = (page) => {
@@ -195,20 +214,36 @@ const BillingPage = () => {
   return (
     <div className="space-y-6">
       <div className={`rounded-xl shadow-sm border flex flex-col h-full ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-200'}`}>
-        <div className={`p-6 border-b flex justify-between items-center flex-shrink-0 ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
+        <div className={`p-6 border-b flex flex-col gap-4 ${isDark ? 'border-slate-800' : 'border-gray-200'}`}>
           <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Transactions</h1>
-
-          <div className="relative">
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className={`border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 appearance-none pr-8 cursor-pointer transition-colors ${isDark ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'}`}
-            >
-              <option value="All">All Transactions</option>
-              <option value="Paid">Paid</option>
-              <option value="Pending Dues">Pending Dues</option>
-            </select>
-            <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-500'}`} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="relative">
+              <select
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 appearance-none pr-8 cursor-pointer transition-colors ${isDark ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'}`}
+              >
+                <option value="All">All Transactions</option>
+                <option value="Paid">Paid</option>
+                <option value="Pending Dues">Pending Dues</option>
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-500'}`} />
+            </div>
+            <div className="relative">
+              <select
+                value={accountIdFilter}
+                onChange={(e) => setAccountIdFilter(e.target.value)}
+                className={`w-full border text-sm rounded-lg px-3 py-2 outline-none focus:border-blue-500 appearance-none pr-8 cursor-pointer transition-colors ${isDark ? 'bg-slate-800 border-slate-700 text-white hover:bg-slate-700' : 'bg-white border-gray-300 text-gray-900 hover:bg-gray-50'}`}
+              >
+                <option value="">All Franchises</option>
+                {franchiseOptions.map((franchise) => (
+                  <option key={franchise._id || franchise.accountId} value={franchise.accountId || ''}>
+                    {franchise.accountName || franchise.companyName || franchise.accountId || 'Unknown'}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none ${isDark ? 'text-slate-400' : 'text-gray-500'}`} />
+            </div>
           </div>
         </div>
 
@@ -216,6 +251,11 @@ const BillingPage = () => {
           {error && (
             <div className={`mb-4 rounded-lg px-4 py-2 text-sm border ${isDark ? 'bg-red-500/10 border-red-500/20 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
               {error}
+            </div>
+          )}
+          {franchiseError && (
+            <div className={`mb-4 rounded-lg px-4 py-2 text-sm border ${isDark ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-200' : 'bg-yellow-50 border-yellow-200 text-yellow-700'}`}>
+              {franchiseError}
             </div>
           )}
 
@@ -231,7 +271,7 @@ const BillingPage = () => {
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Amount</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Date</th>
-                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Type</th>
+                      <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Franchise</th>
                       <th className={`py-4 px-6 text-xs font-semibold uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Action</th>
                     </tr>
                   </thead>
@@ -271,7 +311,7 @@ const BillingPage = () => {
                             </span>
                           </td>
                           <td className={`py-4 px-6 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.date}</td>
-                          <td className={`py-4 px-6 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.type}</td>
+                          <td className={`py-4 px-6 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{tx.franchise}</td>
                           <td className="py-4 px-6">
                             <button
                               onClick={() => handleViewDetails(tx.paymentId)}
@@ -423,6 +463,9 @@ const BillingPage = () => {
                     <p><span className="font-semibold">Status:</span> {statusToUi[selectedPayment?.status] || selectedPayment?.status || '--'}</p>
                     <p><span className="font-semibold">Amount:</span> {formatAmount(selectedPayment?.amount ?? selectedPayment?.planAmount ?? selectedPayment?.plan?.planAmount, selectedPayment?.currency || 'INR')}</p>
                     <p><span className="font-semibold">Plan:</span> {selectedPayment?.planName || selectedPayment?.plan?.planName || '--'}</p>
+                    <p><span className="font-semibold">Customer Name:</span> {getCustomerName(selectedPayment?.customer, '--')}</p>
+                    <p><span className="font-semibold">Customer Email:</span> {selectedPayment?.customer?.email || '--'}</p>
+                    <p><span className="font-semibold">Customer Phone:</span> {selectedPayment?.customer?.phoneNumber || '--'}</p>
                     <p><span className="font-semibold">Profile ID:</span> {selectedPayment?.profileId || selectedPayment?.plan?.profileId || '--'}</p>
                     <p><span className="font-semibold">Group ID:</span> {selectedPayment?.groupId || '--'}</p>
                     <p><span className="font-semibold">Account ID:</span> {selectedPayment?.accountId || '--'}</p>
